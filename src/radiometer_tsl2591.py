@@ -1,6 +1,7 @@
 import datetime
 import os
 import signal
+import threading
 import time
 import board
 import adafruit_tsl2591
@@ -27,17 +28,35 @@ class RadiometerDataLogger():
         self.filename = "R" + datetime.datetime.now().strftime("%Y%m%d") + ".csv"
         self.rmfile = open(DATA_DIR + self.filename, "a")
 
+        self.flush_thread = threading.Thread(target=self.flush_file)
+        self.flush_thread.start()
+
+    # Log the date/time and lux reading
     def log_data(self, obs_time, lux_value):
         # Check for date change
-        filename = "R" + obs_time.strftime("%Y%m%d") + ".csv"
-        if filename != self.filename:
-            self.rmfile.close()
-            self.filename = filename
-            self.rmfile = open(DATA_DIR + self.filename, "a")
+        try:
+            filename = "R" + obs_time.strftime("%Y%m%d") + ".csv"
+            if filename != self.filename:
+                self.rmfile.close()
+                self.filename = filename
+                self.rmfile = open(DATA_DIR + self.filename, "a")
 
-        # Log the data
-        self.rmfile.write(obs_time.strftime("%d/%m/%Y %H:%M:%S.%f")[
-                          :-3] + " {0}\n".format(lux_value))
+            # Log the data
+            self.rmfile.write(obs_time.strftime("%d/%m/%Y %H:%M:%S.%f")[
+                            :-3] + " {0}\n".format(lux_value))
+
+        except Exception as e:
+            print(e)
+
+    # Flush the data log file to disk every 10s
+    def flush_file(self):
+        while True:
+            time.sleep(10)
+            try:
+                self.rmfile.flush()
+            except:
+                pass
+
 
 
 """"""
@@ -118,15 +137,16 @@ if __name__ == "__main__":
                 sensor.gain = adafruit_tsl2591.GAIN_MAX
                 sensor.enable()
 
-            time_stamp = datetime.datetime.now()
-            if DEBUG:
-                out_string = '{0:s} {1:.9f} {2:d} {3:d}'.format(time_stamp.strftime(
-                    "%Y/%m/%d %H:%M:%S.%f")[:-3], lux, vis_level, ir_level)
-                print(out_string)
-            radiometer_data_logger.log_data(time_stamp, lux)
+            if lux != prev_lux:
+                time_stamp = datetime.datetime.now()
+                if DEBUG:
+                    out_string = '{0:s} {1:.9f} {2:d} {3:d}'.format(time_stamp.strftime(
+                        "%Y/%m/%d %H:%M:%S.%f")[:-3], lux, vis_level, ir_level)
+                    print(out_string)
+                radiometer_data_logger.log_data(time_stamp, lux)
 
             prev_lux = lux
-            time.sleep(0.05)
+            time.sleep(0.005)
 
         except Exception as e:
             # print(e)
