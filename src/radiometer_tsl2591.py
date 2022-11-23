@@ -31,7 +31,7 @@ class RadiometerDataLogger():
         # Check for date change
         filename = "R" + obs_time.strftime("%Y%m%d") + ".csv"
         if filename != self.filename:
-            self.filename.close()
+            self.rmfile.close()
             self.filename = filename
             self.rmfile = open(DATA_DIR + self.filename, "a")
 
@@ -41,7 +41,7 @@ class RadiometerDataLogger():
 
 
 """"""
-# Add a get_light_levels method to the afruit_tsl2591 class
+# Add a get_light_levels method to the adafruit_tsl2591 class
 
 
 class adafruit_tsl2591_extended(adafruit_tsl2591.TSL2591):
@@ -93,7 +93,7 @@ class adafruit_tsl2591_extended(adafruit_tsl2591.TSL2591):
 # Main program
 if __name__ == "__main__":
 
-    signal.signal(signal.SIGINT,signalHandler)
+    signal.signal(signal.SIGINT, signalHandler)
     signal.signal(signal.SIGTERM, signalHandler)
 
     # Open the sensor
@@ -120,7 +120,8 @@ if __name__ == "__main__":
 
             time_stamp = datetime.datetime.now()
             if DEBUG:
-                out_string = '{0:s} {1:.9f} {2:d} {3:d}'.format(time_stamp.strftime("%Y/%m/%d %H:%M:%S.%f")[:-3], lux, vis_level, ir_level)
+                out_string = '{0:s} {1:.9f} {2:d} {3:d}'.format(time_stamp.strftime(
+                    "%Y/%m/%d %H:%M:%S.%f")[:-3], lux, vis_level, ir_level)
                 print(out_string)
             radiometer_data_logger.log_data(time_stamp, lux)
 
@@ -135,4 +136,4 @@ if __name__ == "__main__":
                 sensor.gain = adafruit_tsl2591.GAIN_LOW
                 sensor.enable()
 
-            time.sleep(0.1)
+            time.sleep(0.05)
