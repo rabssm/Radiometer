@@ -17,7 +17,8 @@ df = pd.read_csv(file_name, sep=' ', names=columns)
 
 times = pd.to_datetime(df.Time)
 
-print("Contents in csv file:", df)
+print("Contents in csv file:")
+print(df)
 plt.plot(times, df.Lux)
 plt.xlabel('Time')
 plt.ylabel('Lux')
