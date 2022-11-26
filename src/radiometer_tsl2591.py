@@ -42,8 +42,9 @@ class RadiometerDataLogger():
                 self.rmfile = open(DATA_DIR + self.filename, "a")
 
             # Log the data
-            self.rmfile.write(obs_time.strftime("%d/%m/%Y %H:%M:%S.%f")[
-                            :-3] + " {0}\n".format(lux_value))
+            out_string = '{0:s} {1:.9f}\n'.format(time_stamp.strftime(
+                "%Y/%m/%d %H:%M:%S.%f")[:-3], lux_value)
+            self.rmfile.write(out_string)
 
         except Exception as e:
             print(e)
@@ -58,11 +59,7 @@ class RadiometerDataLogger():
                 pass
 
 
-
-""""""
 # Add a get_light_levels method to the adafruit_tsl2591 class
-
-
 class adafruit_tsl2591_extended(adafruit_tsl2591.TSL2591):
 
     def get_light_levels(self):
@@ -137,6 +134,7 @@ if __name__ == "__main__":
                 sensor.gain = adafruit_tsl2591.GAIN_MAX
                 sensor.enable()
 
+            # If there is a change in light level, record it
             if lux != prev_lux:
                 time_stamp = datetime.datetime.now()
                 if DEBUG:
@@ -148,6 +146,7 @@ if __name__ == "__main__":
             prev_lux = lux
             time.sleep(0.005)
 
+        # An exception can occur if the light sensor saturates, so change the gain to low
         except Exception as e:
             # print(e)
             # print("Error reading from sensor")
