@@ -144,15 +144,16 @@ if __name__ == "__main__":
                 radiometer_data_logger.log_data(time_stamp, lux)
 
             prev_lux = lux
-            time.sleep(0.005)
+            time.sleep(0.01)
 
-        # An exception can occur if the light sensor saturates, so change the gain to low
+        # An exception can occur if the light sensor saturates, so change the gain.
+        # Gain at GAIN_MED will allow measurements to be taken up to about 2000 lux
         except Exception as e:
             # print(e)
             # print("Error reading from sensor")
             if sensor.gain == adafruit_tsl2591.GAIN_MAX:
                 sensor.disable()
-                sensor.gain = adafruit_tsl2591.GAIN_LOW
+                sensor.gain = adafruit_tsl2591.GAIN_MED
                 sensor.enable()
 
             time.sleep(0.05)
