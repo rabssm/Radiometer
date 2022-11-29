@@ -11,8 +11,9 @@ The data is written to a dated file in the ~/radiometer_data/ directory. For exa
 ## Installation
 This python software requires the following additional python modules to be installed using pip
 ```
+pip install RPi.GPIO
 pip install board
-pip install adafruit_tsl2591
+pip install adafruit-circuitpython-tsl2591
 ```
 
 ## Running
