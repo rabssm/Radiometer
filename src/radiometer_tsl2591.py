@@ -121,6 +121,8 @@ if __name__ == "__main__":
     sensor.gain = adafruit_tsl2591.GAIN_MAX
     sensor.integration_time = adafruit_tsl2591.INTEGRATIONTIME_100MS
     prev_lux = -100
+    saturation_counter = 0
+
     time.sleep(0.5)
 
     radiometer_data_logger = RadiometerDataLogger()
@@ -143,6 +145,8 @@ if __name__ == "__main__":
                     print(out_string)
                 radiometer_data_logger.log_data(time_stamp, lux)
 
+            # Reset the saturation counter, record the current lux value and sleep
+            saturation_counter = 0
             prev_lux = lux
             time.sleep(0.01)
 
@@ -155,5 +159,10 @@ if __name__ == "__main__":
                 sensor.disable()
                 sensor.gain = adafruit_tsl2591.GAIN_MED
                 sensor.enable()
+            # If the sensor has been saturated for a long time (120s), then stay asleep
+            else:
+                saturation_counter += 1
+                if saturation_counter > 1200:
+                    time.sleep(120)
 
             time.sleep(0.05)
