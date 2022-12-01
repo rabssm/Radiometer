@@ -32,7 +32,7 @@ class RadiometerDataLogger():
         self.flush_thread.start()
 
     # Log the date/time and lux reading
-    def log_data(self, obs_time, lux_value):
+    def log_data(self, obs_time, lux_value, vis_level, ir_level, gain_level):
         # Check for date change
         try:
             filename = "R" + obs_time.strftime("%Y%m%d") + ".csv"
@@ -42,8 +42,8 @@ class RadiometerDataLogger():
                 self.rmfile = open(DATA_DIR + self.filename, "a")
 
             # Log the data
-            out_string = '{0:s} {1:.9f}\n'.format(time_stamp.strftime(
-                "%Y/%m/%d %H:%M:%S.%f")[:-3], lux_value)
+            out_string = '{0:s} {1:.9f} {2:d} {3:d} {4:d}\n'.format(time_stamp.strftime(
+                "%Y/%m/%d %H:%M:%S.%f")[:-3], lux_value, vis_level, ir_level, gain_level)
             self.rmfile.write(out_string)
 
         except Exception as e:
@@ -118,7 +118,8 @@ if __name__ == "__main__":
 
     # Set max gain and fastest integration time (100ms)
     sensor.enable()
-    sensor.gain = adafruit_tsl2591.GAIN_MAX
+    gain_level = adafruit_tsl2591.GAIN_MAX
+    sensor.gain = gain_level
     sensor.integration_time = adafruit_tsl2591.INTEGRATIONTIME_100MS
     prev_lux = -100
     saturation_counter = 0
@@ -131,19 +132,20 @@ if __name__ == "__main__":
         try:
             # Read and calculate the light level in lux.
             lux, vis_level, ir_level = sensor.get_light_levels()
-            if sensor.gain != adafruit_tsl2591.GAIN_MAX and lux < 3.0:
+            if gain_level != adafruit_tsl2591.GAIN_MAX and lux < 3.0:
                 sensor.disable()
-                sensor.gain = adafruit_tsl2591.GAIN_MAX
+                gain_level = adafruit_tsl2591.GAIN_MAX
+                sensor.gain = gain_level
                 sensor.enable()
 
             # If there is a change in light level, record it
             if lux != prev_lux:
                 time_stamp = datetime.datetime.now()
                 if DEBUG:
-                    out_string = '{0:s} {1:.9f} {2:d} {3:d}'.format(time_stamp.strftime(
-                        "%Y/%m/%d %H:%M:%S.%f")[:-3], lux, vis_level, ir_level)
+                    out_string = '{0:s} {1:.9f} {2:d} {3:d} {4:d}'.format(time_stamp.strftime(
+                        "%Y/%m/%d %H:%M:%S.%f")[:-3], lux, vis_level, ir_level, gain_level)
                     print(out_string)
-                radiometer_data_logger.log_data(time_stamp, lux)
+                radiometer_data_logger.log_data(time_stamp, lux, vis_level, ir_level, gain_level)
 
             # Reset the saturation counter, record the current lux value and sleep
             saturation_counter = 0
@@ -155,9 +157,10 @@ if __name__ == "__main__":
         except Exception as e:
             # print(e)
             # print("Error reading from sensor")
-            if sensor.gain == adafruit_tsl2591.GAIN_MAX:
+            if gain_level == adafruit_tsl2591.GAIN_MAX:
                 sensor.disable()
-                sensor.gain = adafruit_tsl2591.GAIN_MED
+                gain_level = adafruit_tsl2591.GAIN_MED
+                sensor.gain = gain_level
                 sensor.enable()
             # If the sensor has been saturated for a long time (120s), then stay asleep
             else:
