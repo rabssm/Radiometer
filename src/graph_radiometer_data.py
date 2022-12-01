@@ -12,7 +12,7 @@ args = vars(ap.parse_args())
 file_name = args['file']
 print(file_name)
 
-columns = ["Date", "Time", "Lux"]
+columns = ["Date", "Time", "Lux", "Visible", "IR", "Gain"]
 df = pd.read_csv(file_name, sep=' ', names=columns)
 
 times = pd.to_datetime(df.Time)
