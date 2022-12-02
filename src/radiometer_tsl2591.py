@@ -166,6 +166,27 @@ if __name__ == "__main__":
             else:
                 saturation_counter += 1
                 if saturation_counter > 1200:
+                    sensor.disable()
                     time.sleep(120)
+
+                    # Take a reading at lowest gain, then set the gain back to medium
+                    sensor.gain = adafruit_tsl2591.GAIN_LOW
+                    sensor.enable()
+                    time.sleep(1)
+                    try:
+                        lux, vis_level, ir_level = sensor.get_light_levels()
+                        time_stamp = datetime.datetime.now()
+                        radiometer_data_logger.log_data(time_stamp, lux, vis_level, ir_level, sensor.gain)
+
+                        sensor.disable()
+                        time.sleep(1)
+                        gain_level = adafruit_tsl2591.GAIN_MED
+                        sensor.gain = gain_level
+                        sensor.enable()
+                        time.sleep(1)
+
+                    except Exception as e:
+                        print(e)
+
 
             time.sleep(0.05)
