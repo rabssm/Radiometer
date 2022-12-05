@@ -36,7 +36,7 @@ if __name__ == "__main__":
         for peak in peaks:
             print(df.Time[peak], df.Lux[peak])
 
-    times = pd.to_datetime(df.Time)
+    times = pd.to_datetime(df.Date + " " + df.Time, format="%Y/%m/%d %H:%M:%S.%f")
 
     print("Contents in csv file:")
     print(df)
