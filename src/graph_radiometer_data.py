@@ -1,17 +1,21 @@
-
 import argparse
+import glob
+import os
 import pandas as pd
 from matplotlib import pyplot as plt
 from scipy.signal import find_peaks
 import numpy as np
 
 
+CAPTURE_DIR = os.path.expanduser('~/radiometer_data/')
+
 # Main program
 if __name__ == "__main__":
 
     # Construct the argument parser and parse the arguments
     ap = argparse.ArgumentParser(description='Analyse radiometer data')
-    ap.add_argument("file", type=str, help="File or directory to analyse.")
+    ap.add_argument("file", type=str, nargs='*',
+                    help="File or directory to analyse. Default is last 2 files in the directory " + CAPTURE_DIR)
     ap.add_argument("-n", "--night", action='store_true',
                     help="Display with night readings range")
     ap.add_argument("-p", "--prominence", type=float, default=0.005,
@@ -19,14 +23,21 @@ if __name__ == "__main__":
 
     args = vars(ap.parse_args())
 
-    file_name = args['file']
+    file_names = args['file']
     night_range = args['night']
     prominence = args['prominence']
 
-    print("Graphing", file_name)
+    # If no filenames were given, use the 2 newest files
+    if len(file_names) == 0:
+        file_names = sorted(glob.glob(CAPTURE_DIR + "R*.csv"))[-2:]
 
+    print("Graphing", file_names)
+
+    # Collect the data into a pandas dataframe
     columns = ["Date", "Time", "Lux", "Visible", "IR", "Gain"]
-    df = pd.read_csv(file_name, sep=' ', names=columns)
+    dfs = [pd.read_csv(file_name, sep=' ', names=columns)
+           for file_name in file_names]
+    df = pd.concat(dfs, ignore_index=True)
 
     # Find peaks in the data
     peaks, properties = find_peaks(
@@ -36,7 +47,9 @@ if __name__ == "__main__":
         for peak in peaks:
             print(df.Time[peak], df.Lux[peak])
 
-    times = pd.to_datetime(df.Date + " " + df.Time, format="%Y/%m/%d %H:%M:%S.%f")
+    # Format the times into datetime values
+    times = pd.to_datetime(df.Date + " " + df.Time,
+                           format="%Y/%m/%d %H:%M:%S.%f")
 
     print("Contents in csv file:")
     print(df)
