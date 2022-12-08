@@ -26,3 +26,7 @@ python radiometer_tsl2591.py
 python graph_radiometer_data.py <data_file>
 ```
 
+Example light intensity graph for a moonlit night:
+
+![alt text](https://github.com/rabssm/Radiometer/blob/main/doc/Figure_Moon1.png)
+
