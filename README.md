@@ -21,12 +21,12 @@ pip install adafruit-circuitpython-tsl2591
 python radiometer_tsl2591.py
 ```
 
-## Display the light intensity graph for a particular day
+## Display the light intensity graph for a particular day/night
 ```
 python graph_radiometer_data.py <data_file>
 ```
 
-Example light intensity graph for a moonlit night:
+Example light intensity graph for a clear moonlit night:
 
 ![alt text](https://github.com/rabssm/Radiometer/blob/main/doc/Figure_Moon1.png)
 
