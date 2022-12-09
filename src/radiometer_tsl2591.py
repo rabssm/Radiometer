@@ -137,15 +137,18 @@ if __name__ == "__main__":
                 gain_level = adafruit_tsl2591.GAIN_MAX
                 sensor.gain = gain_level
                 sensor.enable()
+                # Sleep to ensure next reading is valid
+                time.sleep(0.1)
 
             # If there is a change in light level, record it
             if lux != prev_lux:
                 time_stamp = datetime.datetime.now()
+                radiometer_data_logger.log_data(
+                    time_stamp, lux, vis_level, ir_level, gain_level)
                 if DEBUG:
                     out_string = '{0:s} {1:.9f} {2:d} {3:d} {4:d}'.format(time_stamp.strftime(
                         "%Y/%m/%d %H:%M:%S.%f")[:-3], lux, vis_level, ir_level, gain_level)
                     print(out_string)
-                radiometer_data_logger.log_data(time_stamp, lux, vis_level, ir_level, gain_level)
 
             # Reset the saturation counter, record the current lux value and sleep
             saturation_counter = 0
@@ -176,7 +179,8 @@ if __name__ == "__main__":
                     try:
                         lux, vis_level, ir_level = sensor.get_light_levels()
                         time_stamp = datetime.datetime.now()
-                        radiometer_data_logger.log_data(time_stamp, lux, vis_level, ir_level, sensor.gain)
+                        radiometer_data_logger.log_data(
+                            time_stamp, lux, vis_level, ir_level, sensor.gain)
 
                         sensor.disable()
                         time.sleep(1)
@@ -187,6 +191,5 @@ if __name__ == "__main__":
 
                     except Exception as e:
                         print(e)
-
 
             time.sleep(0.05)
