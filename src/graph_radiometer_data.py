@@ -18,6 +18,8 @@ if __name__ == "__main__":
                     help="File or directory to analyse. Default is last 2 files in the directory " + CAPTURE_DIR)
     ap.add_argument("-n", "--night", action='store_true',
                     help="Display with night readings range")
+    ap.add_argument("-l", "--log", action='store_true',
+                    help="Display with log scale")
     ap.add_argument("-p", "--prominence", type=float, default=0.005,
                     help="Peak detection prominence above background. Default is 0.005 lux")
 
@@ -26,6 +28,7 @@ if __name__ == "__main__":
     file_names = args['file']
     night_range = args['night']
     prominence = args['prominence']
+    log_scale = args['log']
 
     # If no filenames were given, use the 2 newest files
     if len(file_names) == 0:
@@ -60,8 +63,20 @@ if __name__ == "__main__":
     plt.ylabel('Lux')
     if night_range:
         plt.ylim(-0.1, 0.5)
+    elif log_scale:
+        plt.yscale("log")
 
     # Plot the detected peaks
     plt.plot(times[peaks], df.Lux[peaks], marker="o", ls="", ms=3)
 
+    plt.show()
+
+    # Plot the visible and IR data vs time
+    plt.xlabel('Time')
+    plt.ylabel('Count')
+    if log_scale:
+        plt.yscale("log")
+    plt.plot(times, df.Visible, label="Visible")
+    plt.plot(times, df.IR, label="IR")
+    plt.legend()
     plt.show()
