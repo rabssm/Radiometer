@@ -105,6 +105,15 @@ class adafruit_tsl2591_extended(adafruit_tsl2591.TSL2591):
         ) / cpl
         return max(lux1, lux2), channel_0, channel_1
 
+    # Switch off only the ADC_EN
+    def adc_en_off(self):
+        self._write_u8(
+            adafruit_tsl2591._TSL2591_REGISTER_ENABLE,
+            adafruit_tsl2591._TSL2591_ENABLE_POWERON
+            | adafruit_tsl2591._TSL2591_ENABLE_AIEN
+            | adafruit_tsl2591._TSL2591_ENABLE_NPIEN,
+        )
+
 
 # Main program
 if __name__ == "__main__":
@@ -132,13 +141,6 @@ if __name__ == "__main__":
         try:
             # Read and calculate the light level in lux.
             lux, vis_level, ir_level = sensor.get_light_levels()
-            if gain_level != adafruit_tsl2591.GAIN_MAX and lux < 3.0:
-                sensor.disable()
-                gain_level = adafruit_tsl2591.GAIN_MAX
-                sensor.gain = gain_level
-                sensor.enable()
-                # Sleep to ensure next reading is valid
-                time.sleep(0.1)
 
             # If there is a change in light level, record it
             if lux != prev_lux:
@@ -149,6 +151,19 @@ if __name__ == "__main__":
                     out_string = '{0:s} {1:.9f} {2:d} {3:d} {4:d}'.format(time_stamp.strftime(
                         "%Y/%m/%d %H:%M:%S.%f")[:-3], lux, vis_level, ir_level, gain_level)
                     print(out_string)
+
+            # Check if the gain level can be changed back to max
+            if gain_level != adafruit_tsl2591.GAIN_MAX and lux < 3.0:
+                # sensor.disable()
+                sensor.adc_en_off()
+                gain_level = adafruit_tsl2591.GAIN_MAX
+                sensor.gain = gain_level
+                sensor.enable()
+                sensor.integration_time = adafruit_tsl2591.INTEGRATIONTIME_100MS
+                # Sleep to ensure next reading is valid
+                time.sleep(0.12)
+                # Set lux value to ensure next reading is logged
+                # lux = -100
 
             # Reset the saturation counter, record the current lux value and sleep
             saturation_counter = 0
@@ -161,10 +176,15 @@ if __name__ == "__main__":
             # print(e)
             # print("Error reading from sensor")
             if gain_level == adafruit_tsl2591.GAIN_MAX:
-                sensor.disable()
+                # sensor.disable()
+                sensor.adc_en_off()
                 gain_level = adafruit_tsl2591.GAIN_MED
                 sensor.gain = gain_level
                 sensor.enable()
+                sensor.integration_time = adafruit_tsl2591.INTEGRATIONTIME_100MS
+                # Sleep to ensure next reading is valid
+                time.sleep(0.12)
+
             # If the sensor has been saturated for a long time (120s), then stay asleep
             else:
                 saturation_counter += 1
@@ -182,7 +202,8 @@ if __name__ == "__main__":
                         radiometer_data_logger.log_data(
                             time_stamp, lux, vis_level, ir_level, sensor.gain)
 
-                        sensor.disable()
+                        # sensor.disable()
+                        sensor.adc_en_off()
                         time.sleep(1)
                         gain_level = adafruit_tsl2591.GAIN_MED
                         sensor.gain = gain_level
