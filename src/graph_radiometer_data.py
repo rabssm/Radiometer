@@ -20,6 +20,8 @@ if __name__ == "__main__":
                     help="Display with night readings range")
     ap.add_argument("-l", "--log", action='store_true',
                     help="Display with log scale")
+    ap.add_argument("-s", "--sky", action='store_true',
+                    help="Display sky brightness")
     ap.add_argument("-p", "--prominence", type=float, default=0.005,
                     help="Peak detection prominence above background. Default is 0.005 lux")
 
@@ -29,6 +31,7 @@ if __name__ == "__main__":
     night_range = args['night']
     prominence = args['prominence']
     log_scale = args['log']
+    display_sky_brightness = args['sky']
 
     # If no filenames were given, use the 2 newest files
     if len(file_names) == 0:
@@ -70,6 +73,17 @@ if __name__ == "__main__":
     plt.plot(times[peaks], df.Lux[peaks], marker="o", ls="", ms=3)
 
     plt.show()
+
+    # Display sky brightness
+    if display_sky_brightness:
+        sky_brightness = np.log10(df.Lux/108000)/-0.4
+        plt.plot(times, sky_brightness)
+        plt.xlabel('Time')
+        plt.ylabel('Mag/arcsec^2')
+
+        # Plot the detected peaks
+        plt.plot(times[peaks], sky_brightness[peaks], marker="o", ls="", ms=3)
+        plt.show()
 
     # Plot the visible and IR data vs time
     plt.xlabel('Time')
