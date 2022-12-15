@@ -165,10 +165,9 @@ if __name__ == "__main__":
             # Read and calculate the light level in lux.
             lux, vis_level, ir_level = sensor.get_light_levels()
 
-            time_stamp = datetime.datetime.now()
-
             # If there is a change in light level, record it
             if lux != prev_lux:
+                time_stamp = datetime.datetime.now()
                 radiometer_data_logger.log_data(
                     time_stamp, lux, vis_level, ir_level, gain_level)
                 if DEBUG:
@@ -177,7 +176,7 @@ if __name__ == "__main__":
                     print(out_string)
 
             # Check if the gain level can be changed back to max
-            if gain_level != adafruit_tsl2591.GAIN_MAX and lux < 0.5:
+            if gain_level != adafruit_tsl2591.GAIN_MAX and lux < 1.0:
                 sensor.adc_en_off()
                 gain_level = adafruit_tsl2591.GAIN_MAX
                 sensor.gain = gain_level
