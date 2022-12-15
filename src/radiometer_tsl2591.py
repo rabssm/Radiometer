@@ -3,6 +3,8 @@ import os
 import signal
 import threading
 import time
+import numpy as np
+import syslog
 import board
 import adafruit_tsl2591
 
@@ -10,11 +12,33 @@ DATA_DIR = os.path.expanduser('~/radiometer_data/')
 
 DEBUG = True
 
+# Minimum time to wait after a sensor time or gain setting
+GUARD_TIME = 0.12
+
 # Handle process signals
 
 
 def signalHandler(signum, frame):
     os._exit(0)
+
+
+# Measure sky brightness in mag/arcsec^2 using max integration time
+
+
+def measure_sky_brightness(sensor):
+    sensor.integration_time = adafruit_tsl2591.INTEGRATIONTIME_600MS
+    # Sleep to ensure next reading is valid
+    time.sleep(1.3)
+
+    lux, vis_level, ir_level = sensor.get_light_levels()
+
+    sensor.integration_time = adafruit_tsl2591.INTEGRATIONTIME_100MS
+    sky_brightness = np.log10(lux/108000)/-0.4
+    syslog.syslog(syslog.LOG_INFO, "TSL2591 Sky brightness " +
+                  str(sky_brightness))
+    time.sleep(1.3)
+
+    return sky_brightness
 
 
 # Class for logging detections to radiometer data file
@@ -142,9 +166,10 @@ if __name__ == "__main__":
             # Read and calculate the light level in lux.
             lux, vis_level, ir_level = sensor.get_light_levels()
 
+            time_stamp = datetime.datetime.now()
+
             # If there is a change in light level, record it
             if lux != prev_lux:
-                time_stamp = datetime.datetime.now()
                 radiometer_data_logger.log_data(
                     time_stamp, lux, vis_level, ir_level, gain_level)
                 if DEBUG:
@@ -161,13 +186,16 @@ if __name__ == "__main__":
                 sensor.enable()
                 sensor.integration_time = adafruit_tsl2591.INTEGRATIONTIME_100MS
                 # Sleep to ensure next reading is valid
-                time.sleep(0.12)
-                # Set lux value to ensure next reading is logged
-                # lux = -100
+                time.sleep(GUARD_TIME)
 
             # Reset the saturation counter, record the current lux value and sleep
             saturation_counter = 0
             prev_lux = lux
+
+            # On each hour change, measure the sky brightness if it's dark
+            if lux < 0.2 and time_stamp.minute == 0 and time_stamp.second == 0:
+                measure_sky_brightness(sensor)
+
             time.sleep(0.01)
 
         # An exception can occur if the light sensor saturates, so change the gain.
@@ -183,7 +211,7 @@ if __name__ == "__main__":
                 sensor.enable()
                 sensor.integration_time = adafruit_tsl2591.INTEGRATIONTIME_100MS
                 # Sleep to ensure next reading is valid
-                time.sleep(0.12)
+                time.sleep(GUARD_TIME)
 
             # If the sensor has been saturated for a long time (120s), then stay asleep
             else:
