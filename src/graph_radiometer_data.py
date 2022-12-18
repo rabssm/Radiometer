@@ -81,15 +81,17 @@ if __name__ == "__main__":
 
     plt.show()
 
-    # Display sky brightness
+    # Display sky brightness and rolling average
     if display_sky_brightness:
         sky_brightness = np.log10(df.Lux/108000)/-0.4
-        plt.plot(times, sky_brightness)
+        plt.plot(times, sky_brightness, label="Sky Brightness")
+        plt.plot(times, np.log10(rolling/108000)/-0.4, label="Rolling average")
         plt.xlabel('Time')
         plt.ylabel('Mag/arcsec^2')
 
         # Plot the detected peaks
         plt.plot(times[peaks], sky_brightness[peaks], marker="o", ls="", ms=3)
+        plt.legend()
         plt.show()
 
     # Plot the visible and IR data vs time
