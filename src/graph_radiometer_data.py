@@ -60,6 +60,13 @@ if __name__ == "__main__":
     print("Contents in csv file:")
     print(df)
 
+    # Calculate sky brightness and minimum rolling average over 64 readings (~6 seconds)
+    rolling = df.Lux.rolling(64).sum()/64
+    min_lux_index = np.argmin(df.Lux)
+    min_rolling_index = np.argmin(rolling)
+    print("Min sky brightness:", times[min_lux_index], np.log10(df.Lux[min_lux_index]/108000)/-0.4, "mag/arcsec^2")
+    print("Min rolling average sky brightness:", times[min_rolling_index], np.log10(rolling[min_rolling_index]/108000)/-0.4, "mag/arcsec^2")
+
     # Plot the lux data vs time
     plt.plot(times, df.Lux)
     plt.xlabel('Time')
