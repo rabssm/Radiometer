@@ -96,7 +96,7 @@ if __name__ == "__main__":
         plt.ylabel('Mag/arcsec^2 (mpsas)')
 
         plt.title('Sky Brightness')
-        plt.legend()
+        plt.legend(loc='lower left')
         plt.show()
 
     # Plot the visible and IR data vs time
@@ -107,5 +107,5 @@ if __name__ == "__main__":
     plt.plot(times, df.Visible, label="Visible+IR")
     plt.plot(times, df.IR, label="IR")
     plt.title('Raw sensor values')
-    plt.legend()
+    plt.legend(loc='upper left')
     plt.show()
