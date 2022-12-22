@@ -22,8 +22,8 @@ if __name__ == "__main__":
                     help="Display with log scale")
     ap.add_argument("-s", "--sky", action='store_true',
                     help="Display sky brightness")
-    ap.add_argument("-p", "--prominence", type=float, default=0.005,
-                    help="Peak detection prominence above background. Default is 0.005 lux")
+    ap.add_argument("-p", "--prominence", type=float, default=0,
+                    help="Peak detection prominence above background. Usually 0.005 lux. Default is no peak detection")
 
     args = vars(ap.parse_args())
 
@@ -46,12 +46,14 @@ if __name__ == "__main__":
     df = pd.concat(dfs, ignore_index=True)
 
     # Find peaks in the data
-    peaks, properties = find_peaks(
-        df.Lux[df.Lux < 4.0], prominence=prominence)  # , width=3)
-    print("Peaks found:", len(peaks))
-    if (len(peaks) < 50):
-        for peak in peaks:
-            print(df.Time[peak], df.Lux[peak])
+    peaks = None
+    if prominence != 0:
+        peaks, properties = find_peaks(
+            df.Lux[df.Lux < 4.0], prominence=prominence)  # , width=3)
+        print("Peaks found:", len(peaks))
+        if (len(peaks) < 50):
+            for peak in peaks:
+                print(df.Time[peak], df.Lux[peak])
 
     # Format the times into datetime values
     times = pd.to_datetime(df.Date + " " + df.Time,
@@ -79,8 +81,10 @@ if __name__ == "__main__":
         plt.yscale("log")
 
     # Plot the detected peaks
-    plt.plot(times[peaks], df.Lux[peaks], marker="o", ls="", ms=3)
+    if peaks != None:
+        plt.plot(times[peaks], df.Lux[peaks], marker="o", ls="", ms=3)
 
+    plt.title('Illuminance')
     plt.show()
 
     # Display sky brightness and rolling average
@@ -89,10 +93,9 @@ if __name__ == "__main__":
         plt.plot(times, sky_brightness, label="Sky Brightness")
         plt.plot(times, np.log10(rolling/108000)/-0.4, label="Rolling average")
         plt.xlabel('Time')
-        plt.ylabel('Mag/arcsec^2')
+        plt.ylabel('Mag/arcsec^2 (mpsas)')
 
-        # Plot the detected peaks
-        plt.plot(times[peaks], sky_brightness[peaks], marker="o", ls="", ms=3)
+        plt.title('Sky Brightness')
         plt.legend()
         plt.show()
 
@@ -101,7 +104,8 @@ if __name__ == "__main__":
     plt.ylabel('Count')
     if log_scale:
         plt.yscale("log")
-    plt.plot(times, df.Visible, label="Visible")
+    plt.plot(times, df.Visible, label="Visible+IR")
     plt.plot(times, df.IR, label="IR")
+    plt.title('Raw sensor values')
     plt.legend()
     plt.show()
