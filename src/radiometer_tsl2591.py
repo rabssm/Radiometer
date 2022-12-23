@@ -30,7 +30,7 @@ def measure_sky_brightness(sensor):
     # Sleep to ensure next reading is valid
     time.sleep(1.3)
 
-    lux, vis_level, ir_level = sensor.get_light_levels()
+    lux, vis_level, ir_level, again, atime = sensor.get_light_levels()
 
     sensor.integration_time = adafruit_tsl2591.INTEGRATIONTIME_100MS
     sky_brightness = np.log10(lux/108000)/-0.4
@@ -56,7 +56,7 @@ class RadiometerDataLogger():
         self.flush_thread.start()
 
     # Log the date/time and lux reading
-    def log_data(self, obs_time, lux_value, vis_level, ir_level, gain_level):
+    def log_data(self, obs_time, lux_value, vis_level, ir_level, again, atime):
         # Check for date change
         try:
             filename = "R" + obs_time.strftime("%Y%m%d") + ".csv"
@@ -66,9 +66,11 @@ class RadiometerDataLogger():
                 self.rmfile = open(DATA_DIR + self.filename, "a")
 
             # Log the data
-            out_string = '{0:s} {1:.9f} {2:d} {3:d} {4:d}\n'.format(time_stamp.strftime(
-                "%Y/%m/%d %H:%M:%S.%f")[:-3], lux_value, vis_level, ir_level, gain_level)
+            out_string = '{0:s} {1:.9f} {2:d} {3:d} {4:.1f} {5:.1f}\n'.format(time_stamp.strftime(
+                "%Y/%m/%d %H:%M:%S.%f")[:-3], lux_value, vis_level, ir_level, again, atime)
             self.rmfile.write(out_string)
+            if DEBUG:
+                print(out_string, end='')
 
         except Exception as e:
             print(e)
@@ -127,7 +129,13 @@ class adafruit_tsl2591_extended(adafruit_tsl2591.TSL2591):
             (adafruit_tsl2591._TSL2591_LUX_COEFC * channel_0) -
             (adafruit_tsl2591._TSL2591_LUX_COEFD * channel_1)
         ) / cpl
-        return max(lux1, lux2), channel_0, channel_1
+
+        # Alternate lux calculation 1 - currently used by C++ libraries
+        # See: https://github.com/adafruit/Adafruit_TSL2591_Library/issues/14
+        #     lux = (((float)ch0 - (float)ch1)) * (1.0F - ((float)ch1 / (float)ch0)) / cpl;
+        # alt_lux = ((float(channel_0) - float(channel_1))) * (1.0 - (float(channel_1) / float(channel_0))) / cpl
+
+        return max(lux1, lux2), channel_0, channel_1, again, atime
 
     # Switch off only the ADC_EN
     def adc_en_off(self):
@@ -164,18 +172,14 @@ if __name__ == "__main__":
     while True:
         try:
             # Read and calculate the light level in lux.
-            lux, vis_level, ir_level = sensor.get_light_levels()
+            lux, vis_level, ir_level, again, atime = sensor.get_light_levels()
 
             time_stamp = datetime.datetime.now()
 
             # If there is a change in light level, record it
             if lux != prev_lux:
                 radiometer_data_logger.log_data(
-                    time_stamp, lux, vis_level, ir_level, gain_level)
-                if DEBUG:
-                    out_string = '{0:s} {1:.9f} {2:d} {3:d} {4:d}'.format(time_stamp.strftime(
-                        "%Y/%m/%d %H:%M:%S.%f")[:-3], lux, vis_level, ir_level, gain_level)
-                    print(out_string)
+                    time_stamp, lux, vis_level, ir_level, again, atime)
 
             # Check if the gain level can be changed back to max
             if gain_level != adafruit_tsl2591.GAIN_MAX and lux < 3.0:
@@ -225,10 +229,10 @@ if __name__ == "__main__":
                     sensor.enable()
                     time.sleep(1)
                     try:
-                        lux, vis_level, ir_level = sensor.get_light_levels()
+                        lux, vis_level, ir_level, again, atime = sensor.get_light_levels()
                         time_stamp = datetime.datetime.now()
                         radiometer_data_logger.log_data(
-                            time_stamp, lux, vis_level, ir_level, sensor.gain)
+                            time_stamp, lux, vis_level, ir_level, again, atime)
 
                         # sensor.disable()
                         sensor.adc_en_off()
