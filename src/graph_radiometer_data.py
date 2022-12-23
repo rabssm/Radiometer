@@ -9,6 +9,9 @@ import numpy as np
 
 CAPTURE_DIR = os.path.expanduser('~/radiometer_data/')
 
+# Taken from https://github.com/adafruit/Adafruit_CircuitPython_TSL2591/blob/main/adafruit_tsl2591.py for cpl calculation
+ADAFRUIT_TSL2591_LUX_DF = 408.0
+
 # Main program
 if __name__ == "__main__":
 
@@ -40,7 +43,7 @@ if __name__ == "__main__":
     print("Graphing", file_names)
 
     # Collect the data into a pandas dataframe
-    columns = ["Date", "Time", "Lux", "Visible", "IR", "Gain"]
+    columns = ["Date", "Time", "Lux", "Visible", "IR", "Gain", "IntTime"]
     dfs = [pd.read_csv(file_name, sep=' ', names=columns)
            for file_name in file_names]
     df = pd.concat(dfs, ignore_index=True)
