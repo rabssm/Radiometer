@@ -21,6 +21,18 @@ pip install adafruit-circuitpython-tsl2591
 python radiometer_tsl2591.py
 ```
 
+## "csv" Data format
+
+The output data file is a space-separated file containing the date, time, lux value, visible and IR sensor raw data, sensor gain setting, and sensor integration time in milliseconds.
+```
+              Date          Time          Lux  Visible    IR    Gain  IntTime
+0       2022/12/24  00:00:02.630     0.002661       13     4  9876.0    100.0
+1       2022/12/24  00:00:02.758     0.001570       12     5  9876.0    100.0
+2       2022/12/24  00:00:03.017     0.001157       11     5  9876.0    100.0
+3       2022/12/24  00:00:03.119     0.002396       14     5  9876.0    100.0
+4       2022/12/24  00:00:03.416     0.001570       12     5  9876.0    100.0
+```
+
 ## Display the light intensity graph for a particular day/night
 ```
 python graph_radiometer_data.py <data_file>
