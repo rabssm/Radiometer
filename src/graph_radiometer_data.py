@@ -66,7 +66,7 @@ if __name__ == "__main__":
     print(df)
 
     # Calculate sky brightness and minimum rolling average over 64 readings (~6 seconds)
-    rolling = df.Lux.rolling(64).sum()/64
+    rolling = df.Lux.rolling(64, center=True).sum()/64
     min_lux_index = np.argmin(df.Lux)
     min_rolling_index = np.argmin(rolling)
     print("Min sky brightness:", times[min_lux_index], np.log10(
