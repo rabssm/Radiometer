@@ -6,6 +6,8 @@ A Raspberry Pi Zero or Raspberry Pi 4 running the latest release of Raspbian. Th
 ## Software
 Python 3 script to continuously read and log the light intensity levels in lux detected by an Adafruit TSL2591 digital light sensor. The integration time is set to the minimum time allowed by this device (100ms), which allows light levels to be read at 10 Hz. The gain is set to maximum, but in the event of the detector becoming saturated, the gain is changed to the medium setting, which should allow light levels to continue to be monitored in the event of very bright fireball events.
 
+There is also a script to monitor sky quality, by measuring the sky brightness. This uses the longest integration time available for the device (600ms), so that there are more counts detected in very dark conditions. This increased integration time should allow sky brightness measurements down to 22 mpsas.
+
 The data is written to a dated file in the ~/radiometer_data/ directory. For example, the file R20221127.csv contains the light level data for 2022-11-27, with a timestamp for each reading. The timestamps are the times at the end of each lux reading.
 
 ## Installation
@@ -16,12 +18,18 @@ pip install board
 pip install adafruit-circuitpython-tsl2591
 ```
 
-## Running
+## Running the radiometer data acquisition software
 ```
 python radiometer_tsl2591.py
 ```
 
-## "csv" Data format
+## Running the sky brightness/quality data acquisition software
+```
+python sqm_tsl2591.py
+```
+
+
+## "csv" Data Format
 
 The output data file is a space-separated file containing the date, time, lux value, visible and IR sensor raw data, sensor gain setting, and sensor integration time in milliseconds.
 
@@ -35,7 +43,7 @@ Note that the "Visible" and "IR" columns contain the channel 0 and channel 1 raw
 4       2022/12/24  00:00:03.416     0.001570       12     5  9876.0    100.0
 ```
 
-## Display the light intensity graph for a particular day/night
+## Display the light intensity, sky brightness and raw data graphs for a particular day/night
 ```
 python graph_radiometer_data.py <data_file>
 ```
