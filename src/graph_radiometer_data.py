@@ -49,7 +49,7 @@ if __name__ == "__main__":
     df = pd.concat(dfs, ignore_index=True)
 
     # Find peaks in the data
-    peaks = None
+    peaks = []
     if prominence != 0:
         peaks, properties = find_peaks(
             df.Lux[df.Lux < 4.0], prominence=prominence)  # , width=3)
@@ -84,7 +84,7 @@ if __name__ == "__main__":
         plt.yscale("log")
 
     # Plot the detected peaks
-    if peaks != None:
+    if len(peaks) > 0:
         plt.plot(times[peaks], df.Lux[peaks], marker="o", ls="", ms=3)
 
     plt.title('Illuminance')
@@ -96,7 +96,7 @@ if __name__ == "__main__":
         plt.plot(times, sky_brightness, label="Sky Brightness")
         plt.plot(times, np.log10(rolling/108000)/-0.4, label="Rolling average")
         plt.xlabel('Time')
-        plt.ylabel('Mag/arcsec^2 (mpsas)')
+        plt.ylabel(r'Mag/$arcsec^2$ (mpsas)')
 
         plt.title('Sky Brightness')
         plt.legend(loc='lower left')
@@ -112,3 +112,11 @@ if __name__ == "__main__":
     plt.title('Raw sensor values')
     plt.legend(loc='upper left')
     plt.show()
+
+    # Calculate average measured integration times
+    res = np.diff(times)[::2].astype(np.int32)
+    m = res[res < 140000000].mean()/1e6
+    print("Average measured times between readings for 100ms int time", m, "ms")
+    res1 = res[res > 560000000]
+    m = res1[res1 < 640000000].mean()/1e6
+    print("Average measured times between readings for 600ms int time", m, "ms")
