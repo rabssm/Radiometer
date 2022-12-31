@@ -38,7 +38,7 @@ if __name__ == "__main__":
 
     # If no filenames were given, use the 2 newest files
     if len(file_names) == 0:
-        file_names = sorted(glob.glob(CAPTURE_DIR + "R*.csv"))[-2:]
+        file_names = sorted(glob.glob(CAPTURE_DIR + "R*.csv*"))[-2:]
 
     print("Graphing", file_names)
 
