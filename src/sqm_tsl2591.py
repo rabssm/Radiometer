@@ -65,7 +65,7 @@ class RadiometerDataLogger():
                 self.rmfile = open(DATA_DIR + self.filename, "a")
 
             # Log the data
-            out_string = '{0:s} {1:.9f} {2:d} {3:d} {4:.1f} {5:.1f}\n'.format(time_stamp.strftime(
+            out_string = '{0:s} {1:.9f} {2:d} {3:d} {4:.1f} {5:.1f}\n'.format(obs_time.strftime(
                 "%Y/%m/%d %H:%M:%S.%f")[:-3], lux_value, vis_level, ir_level, again, atime)
             self.rmfile.write(out_string)
             if DEBUG:
