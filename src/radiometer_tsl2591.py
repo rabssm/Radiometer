@@ -25,14 +25,22 @@ def signalHandler(signum, frame):
 # Measure sky brightness in mag/arcsec^2 using max integration time
 
 
-def measure_sky_brightness(sensor):
+def measure_sky_brightness(sensor, radiometer_data_logger):
     sensor.integration_time = adafruit_tsl2591.INTEGRATIONTIME_600MS
     # Sleep to ensure next reading is valid
     time.sleep(1.3)
 
-    lux, vis_level, ir_level, again, atime = sensor.get_light_levels()
+    try:
+        lux, vis_level, ir_level, again, atime = sensor.get_light_levels()
+    except:
+        sensor.integration_time = adafruit_tsl2591.INTEGRATIONTIME_100MS
+        time.sleep(1.3)
+        return 0
 
     sensor.integration_time = adafruit_tsl2591.INTEGRATIONTIME_100MS
+    radiometer_data_logger.log_data(
+        datetime.datetime.now(), lux, vis_level, ir_level, again, atime)
+
     sky_brightness = np.log10(lux/108000)/-0.4
     syslog.syslog(syslog.LOG_INFO, "TSL2591 Sky brightness " +
                   str(sky_brightness))
@@ -198,7 +206,7 @@ if __name__ == "__main__":
 
             # On each hour change, measure the sky brightness if it's dark
             if lux < 0.2 and time_stamp.minute == 0 and time_stamp.second == 0:
-                measure_sky_brightness(sensor)
+                measure_sky_brightness(sensor, radiometer_data_logger)
 
             time.sleep(0.01)
 
