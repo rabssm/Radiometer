@@ -65,6 +65,14 @@ if __name__ == "__main__":
     print("Contents in csv file:")
     print(df)
 
+    # Print a sorted list of sky brightnesses ie. those with 600ms integration time
+    sky_brightness_measurements = df[df['IntTime'] == 600]
+    print("\nSky brightness measurements (sorted by brightness)")
+    sky_brightness_measurements_sorted = sky_brightness_measurements.sort_values(
+        by=['Lux'], ascending=False)
+    for row in sky_brightness_measurements_sorted.itertuples():
+        print(row.Date, row.Time, "SQM:", np.log10((row.Lux)/108000)/-0.4)
+
     # Calculate sky brightness and minimum rolling average over 64 readings (~6 seconds)
     rolling = df.Lux.rolling(64, center=True).sum()/64
     min_lux_index = np.argmin(df.Lux)
