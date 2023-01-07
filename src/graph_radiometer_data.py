@@ -52,7 +52,7 @@ if __name__ == "__main__":
     peaks = []
     if prominence != 0:
         peaks, properties = find_peaks(
-            df.Lux[df.Lux < 4.0], prominence=prominence)  # , width=3)
+            df.Lux, prominence=prominence)  # , width=3)
         print("Peaks found:", len(peaks))
         if (len(peaks) < 50):
             for peak in peaks:
