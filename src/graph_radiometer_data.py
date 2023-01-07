@@ -91,9 +91,10 @@ if __name__ == "__main__":
     elif log_scale:
         plt.yscale("log")
 
-    # Plot the detected peaks
+    # Plot the detected peaks if the lux value is less than 4
     if len(peaks) > 0:
-        plt.plot(times[peaks], df.Lux[peaks], marker="o", ls="", ms=3)
+        plt.plot(times[peaks[df.Lux[peaks] < 4.0]],
+                 df.Lux[peaks[df.Lux[peaks] < 4.0]], marker="o", ls="", ms=3)
 
     plt.title('Illuminance')
     plt.show()
