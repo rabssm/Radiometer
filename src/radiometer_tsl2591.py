@@ -241,16 +241,15 @@ if __name__ == "__main__":
                         time_stamp = datetime.datetime.now()
                         radiometer_data_logger.log_data(
                             time_stamp, lux, vis_level, ir_level, again, atime)
-
-                        # sensor.disable()
-                        sensor.adc_en_off()
-                        time.sleep(1)
-                        gain_level = adafruit_tsl2591.GAIN_MED
-                        sensor.gain = gain_level
-                        sensor.enable()
-                        time.sleep(1)
-
                     except Exception as e:
                         print(e)
+
+                    # sensor.disable()
+                    sensor.adc_en_off()
+                    time.sleep(1)
+                    gain_level = adafruit_tsl2591.GAIN_MED
+                    sensor.gain = gain_level
+                    sensor.enable()
+                    time.sleep(1)
 
             time.sleep(0.05)
