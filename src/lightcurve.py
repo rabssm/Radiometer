@@ -54,6 +54,10 @@ if __name__ == "__main__":
            for file_name in file_names]
     df = pd.concat(dfs, ignore_index=True)
 
+    # Format the times into datetime values
+    times = pd.to_datetime(df.Date + " " + df.Time,
+                           format="%Y/%m/%d %H:%M:%S.%f")
+
     # Find peaks in the data
     peaks = []
     if prominence != 0:
@@ -67,32 +71,32 @@ if __name__ == "__main__":
         print(peaks, properties)
         median_adjusted_peaks = df.Lux[peak -
                                        (int(width/2)):peak+(int(width/2))]-np.median(df.Lux)
-        # print(adjusted_peaks)
+        times_over_peaks = times[peak - (int(width/2)):peak+(int(width/2))]
+        times_over_peaks = times_over_peaks - times[peak - (int(width/2))]
+        np_times_over_peaks = times_over_peaks.to_numpy(dtype=float)/1e9
+
         print("Median", np.median(df.Lux), "Peak",
               df.Lux[peak], "STD", np.std(df.Lux))
-        integrated_lux = np.trapz(median_adjusted_peaks)
+        integrated_lux = np.trapz(median_adjusted_peaks, x=np_times_over_peaks)
         # , simpson(adjusted_peaks))
         print("Area under peak:", integrated_lux, "Lux")
         lux_array = np.array([integrated_lux, np.std(df.Lux)])
 
         # Calculate the energy and mass
         area = 4 * np.pi * np.square(distance)
-        lum_effic = 0.007
+        lum_effic = 0.0079
         angle_adjusted_lux = lux_array / np.cos(np.deg2rad(angle))
         total_energy = angle_adjusted_lux * area * lum_effic
-        tau = 0.007
+        tau = 0.005
         mass = 2 * total_energy / (tau * np.square(velocity))
 
         print("Estimated energy:", total_energy)
         print("Estimated mass:", np.around(
             mass[0], 2), "+/-", np.around(mass[1], 3), "kg")
 
-    # Format the times into datetime values
-    times = pd.to_datetime(df.Date + " " + df.Time,
-                           format="%Y/%m/%d %H:%M:%S.%f")
 
-    print("Contents in csv file:")
-    print(df)
+    #print("Contents in csv file:")
+    # print(df)
 
     # Plot the lux data vs time
     plt.plot(times, df.Lux)
