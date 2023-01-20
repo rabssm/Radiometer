@@ -154,6 +154,25 @@ class adafruit_tsl2591_extended(adafruit_tsl2591.TSL2591):
             | adafruit_tsl2591._TSL2591_ENABLE_NPIEN,
         )
 
+    def clear_interrupts(self):
+        # Clear ALS interrupts.
+        with self._device as i2c:
+            # Make sure to add command bit and special function bit to write request.
+            sf = 0x07
+            self._BUFFER[0] = (0xE0 | sf) & 0xFF
+            self._BUFFER[1] = 0x00 & 0xFF
+            i2c.write(self._BUFFER, end=2)
+
+    def wait_interrupt(self):
+        # Wait for AINT interrupt to signal a reading has completed
+        # Initial sleep 50ms
+        time.sleep(0.05)
+        # Get the status to check for the AINT interrupt being asserted
+        while self._read_u8(0x13) & 0x10 == 0:
+            time.sleep(0.005)
+
+        self.clear_interrupts()
+
 
 # Main program
 if __name__ == "__main__":
@@ -179,15 +198,18 @@ if __name__ == "__main__":
 
     while True:
         try:
+            # Wait for an ALS interrupt to signal a reading has completed
+            sensor.wait_interrupt()
+
+            # Get a time stamp for the latest reading
+            time_stamp = datetime.datetime.now()
+
             # Read and calculate the light level in lux.
             lux, vis_level, ir_level, again, atime = sensor.get_light_levels()
 
-            time_stamp = datetime.datetime.now()
-
-            # If there is a change in light level, record it
-            if lux != prev_lux:
-                radiometer_data_logger.log_data(
-                    time_stamp, lux, vis_level, ir_level, again, atime)
+            # Log the latest reading
+            radiometer_data_logger.log_data(
+                time_stamp, lux, vis_level, ir_level, again, atime)
 
             # Check if the gain level can be changed back to max
             if gain_level != adafruit_tsl2591.GAIN_MAX and lux < 3.0:
@@ -207,8 +229,6 @@ if __name__ == "__main__":
             # On each hour change, measure the sky brightness if it's dark
             if lux < 0.2 and time_stamp.minute == 0 and time_stamp.second == 0:
                 measure_sky_brightness(sensor, radiometer_data_logger)
-
-            time.sleep(0.01)
 
         # An exception can occur if the light sensor saturates, so change the gain.
         # Gain at GAIN_MED will allow measurements to be taken up to about 2000 lux
