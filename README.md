@@ -3,6 +3,9 @@
 ## Hardware
 A Raspberry Pi Zero or Raspberry Pi 4 running the latest release of Raspbian. The TSL2591 is connected to the power and I2C pins of the GPIO bus as described in the Adafruit manuals for the TSL2591.
 
+There is a track on the back of the TSL2591 PCB which should be cut to disable the bright LED on the front of the board.
+As the Raspberry Pi needs to be mounted close to the sensor, the LED's on the Raspberry Pi should also be switched off to remove any source of extraneous light.
+
 ## Software
 Python 3 script to continuously read and log the light intensity levels in lux detected by an Adafruit TSL2591 digital light sensor. The integration time is set to the minimum time allowed by this device (100ms), which allows light levels to be read at 10 Hz. The gain is set to maximum, but in the event of the detector becoming saturated, the gain is changed to the medium setting, which should allow light levels to continue to be monitored in the event of very bright fireball events.
 
