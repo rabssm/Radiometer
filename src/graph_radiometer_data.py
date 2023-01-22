@@ -124,8 +124,12 @@ if __name__ == "__main__":
 
     # Calculate average measured integration times
     res = np.diff(times)[::2].astype(np.int32)
-    m = res[res < 140000000].mean()/1e6
-    print("Average measured times between readings for 100ms int time", m, "ms")
+    res1 = res[res < 140000000]
+    if len(res1) > 0 :
+        m = res1.mean()/1e6
+        print("Average measured times between readings for 100ms int time", m, "ms")
     res1 = res[res > 560000000]
-    m = res1[res1 < 640000000].mean()/1e6
-    print("Average measured times between readings for 600ms int time", m, "ms")
+    res2 = res1[res1 < 640000000]
+    if len(res2) > 0 :
+        m = res2.mean()/1e6
+        print("Average measured times between readings for 600ms int time", m, "ms")
