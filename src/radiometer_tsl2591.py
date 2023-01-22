@@ -1,3 +1,4 @@
+import argparse
 import datetime
 import os
 import signal
@@ -10,31 +11,29 @@ import adafruit_tsl2591
 
 DATA_DIR = os.path.expanduser('~/radiometer_data/')
 
-DEBUG = True
-
 # Minimum time to wait after a sensor time or gain setting
 GUARD_TIME = 0.12
 
-# Handle process signals
-
 
 def signalHandler(signum, frame):
+    # Handle process signals
     os._exit(0)
 
 
-# Measure sky brightness in mag/arcsec^2 using max integration time
-
-
 def measure_sky_brightness(sensor, radiometer_data_logger):
+    # Measure sky brightness in mag/arcsec^2 using max integration time
     sensor.integration_time = adafruit_tsl2591.INTEGRATIONTIME_600MS
     # Sleep to ensure next reading is valid
-    time.sleep(1.3)
+    sensor.wait_interrupt()
+    sensor.wait_interrupt()
+    # time.sleep(1.3)
 
     try:
         lux, vis_level, ir_level, again, atime = sensor.get_light_levels()
     except:
         sensor.integration_time = adafruit_tsl2591.INTEGRATIONTIME_100MS
-        time.sleep(1.3)
+        sensor.wait_interrupt()
+        # time.sleep(1.3)
         return 0
 
     sensor.integration_time = adafruit_tsl2591.INTEGRATIONTIME_100MS
@@ -44,7 +43,8 @@ def measure_sky_brightness(sensor, radiometer_data_logger):
     sky_brightness = np.log10(lux/108000)/-0.4
     syslog.syslog(syslog.LOG_INFO, "TSL2591 Sky brightness " +
                   str(sky_brightness))
-    time.sleep(1.3)
+    sensor.wait_interrupt()
+    # time.sleep(1.3)
 
     return sky_brightness
 
@@ -77,7 +77,7 @@ class RadiometerDataLogger():
             out_string = '{0:s} {1:.9f} {2:d} {3:d} {4:.1f} {5:.1f}\n'.format(obs_time.strftime(
                 "%Y/%m/%d %H:%M:%S.%f")[:-3], lux_value, vis_level, ir_level, again, atime)
             self.rmfile.write(out_string)
-            if DEBUG:
+            if verbose:
                 print(out_string, end='')
 
         except Exception as e:
@@ -177,6 +177,19 @@ class adafruit_tsl2591_extended(adafruit_tsl2591.TSL2591):
 # Main program
 if __name__ == "__main__":
 
+    # Construct the argument parser and parse the arguments
+    ap = argparse.ArgumentParser(description='Acquire light levels')
+    ap.add_argument("-v", "--verbose", action='store_true',
+                    help="Verbose output to terminal")
+    ap.add_argument("-s", "--sqm", action='store_true',
+                    help="Take hourly SQM measurements")
+
+    args = vars(ap.parse_args())
+
+    verbose = args['verbose']
+    sqm = args['sqm']
+
+    # Handle termination signals gracefully
     signal.signal(signal.SIGINT, signalHandler)
     signal.signal(signal.SIGTERM, signalHandler)
 
@@ -219,19 +232,20 @@ if __name__ == "__main__":
                 sensor.gain = gain_level
                 sensor.enable()
                 sensor.integration_time = adafruit_tsl2591.INTEGRATIONTIME_100MS
-                # Sleep to ensure next reading is valid
-                time.sleep(GUARD_TIME)
+                # Wait for next valid reading
+                sensor.wait_interrupt()
+                # time.sleep(GUARD_TIME)
 
             # Reset the saturation counter, record the current lux value and sleep
             saturation_counter = 0
             prev_lux = lux
 
             # On each hour change, measure the sky brightness if it's dark
-            if lux < 0.2 and time_stamp.minute == 0 and time_stamp.second == 0:
+            if sqm and lux < 0.2 and time_stamp.minute == 0 and time_stamp.second == 0:
                 measure_sky_brightness(sensor, radiometer_data_logger)
 
         # An exception can occur if the light sensor saturates, so change the gain.
-        # Gain at GAIN_MED will allow measurements to be taken up to about 2000 lux
+        # Gain at GAIN_MED will allow measurements to be taken up to about 3000 lux
         except Exception as e:
             # print(e)
             # print("Error reading from sensor")
@@ -243,7 +257,8 @@ if __name__ == "__main__":
                 sensor.enable()
                 sensor.integration_time = adafruit_tsl2591.INTEGRATIONTIME_100MS
                 # Sleep to ensure next reading is valid
-                time.sleep(GUARD_TIME)
+                sensor.wait_interrupt()
+                # time.sleep(GUARD_TIME)
 
             # If the sensor has been saturated for a long time (120s), then stay asleep
             else:
