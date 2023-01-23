@@ -14,6 +14,9 @@ DATA_DIR = os.path.expanduser('~/radiometer_data/')
 # Minimum time to wait after a sensor time or gain setting
 GUARD_TIME = 0.12
 
+# The tsl2591 default i2c address is 0x29
+DEFAULT_I2C_ADDRESS = adafruit_tsl2591._TSL2591_ADDR
+
 
 def signalHandler(signum, frame):
     # Handle process signals
@@ -186,8 +189,8 @@ if __name__ == "__main__":
 
     # Construct the argument parser and parse the arguments
     ap = argparse.ArgumentParser(description='Acquire light levels')
-    ap.add_argument("-a", "--address", type=lambda x: int(x, 0), default=0x29,
-                    help="Set the light sensor's i2c address. Default is 0x29")
+    ap.add_argument("-a", "--address", type=lambda x: int(x, 0), default=DEFAULT_I2C_ADDRESS,
+                    help="Set the light sensor's i2c address. Default is " + hex(DEFAULT_I2C_ADDRESS))
     gain_choices = ["max", "high", "med", "low", "auto"]
     ap.add_argument(
         "-g", "--gain", choices=gain_choices, type=str, default="auto", help="Gain level for the light sensor. Default is auto")
