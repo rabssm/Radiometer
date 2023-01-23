@@ -186,7 +186,7 @@ if __name__ == "__main__":
 
     # Construct the argument parser and parse the arguments
     ap = argparse.ArgumentParser(description='Acquire light levels')
-    ap.add_argument("-a", "--address", type=lambda x: int(x,0), default=0x29,
+    ap.add_argument("-a", "--address", type=lambda x: int(x, 0), default=0x29,
                     help="Set the light sensor's i2c address. Default is 0x29")
     gain_choices = ["max", "high", "med", "low", "auto"]
     ap.add_argument(
@@ -205,15 +205,12 @@ if __name__ == "__main__":
     sqm = args['sqm']
     verbose = args['verbose']
 
-    # Get the TSL2591 gain from the command line string. If the gain is set to auto, set the gain to maximmum
+    # Get the TSL2591 gain from the command line string. If the gain is set to auto, set the gain to maximum
     valid_device_gain_settings = [adafruit_tsl2591.GAIN_MAX,
                                   adafruit_tsl2591.GAIN_HIGH, adafruit_tsl2591.GAIN_MED, adafruit_tsl2591.GAIN_LOW, adafruit_tsl2591.GAIN_MAX]
     required_device_gain_setting = valid_device_gain_settings[gain_choices.index(
         gain_name)]
-    if gain_name == "auto":
-        auto_gain = True
-    else:
-        auto_gain = False
+    auto_gain = True if gain_name == "auto" else False
 
     # Handle termination signals gracefully
     signal.signal(signal.SIGINT, signalHandler)
@@ -251,7 +248,7 @@ if __name__ == "__main__":
                 time_stamp, lux, vis_level, ir_level, again, atime)
 
             # Check if the gain level can be changed back to max
-            if gain_level != adafruit_tsl2591.GAIN_MAX and lux < 3.0:
+            if auto_gain and gain_level != adafruit_tsl2591.GAIN_MAX and lux < 3.0:
                 # sensor.disable()
                 sensor.adc_en_off()
                 gain_level = adafruit_tsl2591.GAIN_MAX
