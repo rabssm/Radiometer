@@ -66,6 +66,7 @@ class RadiometerDataLogger():
             print("Writing data to file:", DATA_DIR + self.filename)
         self.rmfile = open(DATA_DIR + self.filename, "a")
 
+        # Start a thread to periodically flush the data to disk
         self.flush_thread = threading.Thread(target=self.flush_file)
         self.flush_thread.start()
 
@@ -185,6 +186,8 @@ if __name__ == "__main__":
 
     # Construct the argument parser and parse the arguments
     ap = argparse.ArgumentParser(description='Acquire light levels')
+    ap.add_argument("-a", "--address", type=lambda x: int(x,0), default=0x29,
+                    help="Set the light sensor's i2c address. Default is 0x29")
     gain_choices = ["max", "high", "med", "low", "auto"]
     ap.add_argument(
         "-g", "--gain", choices=gain_choices, type=str, default="auto", help="Gain level for the light sensor. Default is auto")
@@ -196,6 +199,7 @@ if __name__ == "__main__":
                     help="Verbose output to terminal")
     args = vars(ap.parse_args())
 
+    i2c_address = args['address']
     gain_name = args['gain']
     device_name = args['name']
     sqm = args['sqm']
@@ -217,7 +221,7 @@ if __name__ == "__main__":
 
     # Open the sensor
     i2c = board.I2C()
-    sensor = adafruit_tsl2591_extended(i2c)
+    sensor = adafruit_tsl2591_extended(i2c, address=i2c_address)
 
     # Set gain and fastest integration time (100ms)
     sensor.enable()
