@@ -52,12 +52,18 @@ def measure_sky_brightness(sensor, radiometer_data_logger):
 # Class for logging detections to radiometer data file
 class RadiometerDataLogger():
 
-    def __init__(self):
+    def __init__(self, name=""):
+        self.name = name
+        if name:
+            self.name = "_" + name + "_"
         # Make the data logging directory
         os.makedirs(DATA_DIR, exist_ok=True)
 
         # Set the filename and open it for appending
-        self.filename = "R" + datetime.datetime.now().strftime("%Y%m%d") + ".csv"
+        self.filename = "R" + self.name + \
+            datetime.datetime.now().strftime("%Y%m%d") + ".csv"
+        if verbose:
+            print("Writing data to file:", DATA_DIR + self.filename)
         self.rmfile = open(DATA_DIR + self.filename, "a")
 
         self.flush_thread = threading.Thread(target=self.flush_file)
@@ -67,7 +73,7 @@ class RadiometerDataLogger():
     def log_data(self, obs_time, lux_value, vis_level, ir_level, again, atime):
         # Check for date change
         try:
-            filename = "R" + obs_time.strftime("%Y%m%d") + ".csv"
+            filename = "R" + self.name + obs_time.strftime("%Y%m%d") + ".csv"
             if filename != self.filename:
                 self.rmfile.close()
                 self.filename = filename
@@ -179,15 +185,31 @@ if __name__ == "__main__":
 
     # Construct the argument parser and parse the arguments
     ap = argparse.ArgumentParser(description='Acquire light levels')
-    ap.add_argument("-v", "--verbose", action='store_true',
-                    help="Verbose output to terminal")
+    gain_choices = ["max", "high", "med", "low", "auto"]
+    ap.add_argument(
+        "-g", "--gain", choices=gain_choices, type=str, default="auto", help="Gain level for the light sensor. Default is auto")
+    ap.add_argument("-n", "--name", type=str, default="",
+                    help="Optional name of the sensor for the output file name. Default is no name")
     ap.add_argument("-s", "--sqm", action='store_true',
                     help="Take hourly SQM measurements")
-
+    ap.add_argument("-v", "--verbose", action='store_true',
+                    help="Verbose output to terminal")
     args = vars(ap.parse_args())
 
-    verbose = args['verbose']
+    gain_name = args['gain']
+    device_name = args['name']
     sqm = args['sqm']
+    verbose = args['verbose']
+
+    # Get the TSL2591 gain from the command line string. If the gain is set to auto, set the gain to maximmum
+    valid_device_gain_settings = [adafruit_tsl2591.GAIN_MAX,
+                                  adafruit_tsl2591.GAIN_HIGH, adafruit_tsl2591.GAIN_MED, adafruit_tsl2591.GAIN_LOW, adafruit_tsl2591.GAIN_MAX]
+    required_device_gain_setting = valid_device_gain_settings[gain_choices.index(
+        gain_name)]
+    if gain_name == "auto":
+        auto_gain = True
+    else:
+        auto_gain = False
 
     # Handle termination signals gracefully
     signal.signal(signal.SIGINT, signalHandler)
@@ -197,9 +219,9 @@ if __name__ == "__main__":
     i2c = board.I2C()
     sensor = adafruit_tsl2591_extended(i2c)
 
-    # Set max gain and fastest integration time (100ms)
+    # Set gain and fastest integration time (100ms)
     sensor.enable()
-    gain_level = adafruit_tsl2591.GAIN_MAX
+    gain_level = required_device_gain_setting
     sensor.gain = gain_level
     sensor.integration_time = adafruit_tsl2591.INTEGRATIONTIME_100MS
     prev_lux = -100
@@ -207,7 +229,7 @@ if __name__ == "__main__":
 
     time.sleep(0.5)
 
-    radiometer_data_logger = RadiometerDataLogger()
+    radiometer_data_logger = RadiometerDataLogger(name=device_name)
 
     while True:
         try:
@@ -236,7 +258,7 @@ if __name__ == "__main__":
                 sensor.wait_interrupt()
                 # time.sleep(GUARD_TIME)
 
-            # Reset the saturation counter, record the current lux value and sleep
+            # Reset the saturation counter amd store the previous lux value
             saturation_counter = 0
             prev_lux = lux
 
@@ -244,11 +266,16 @@ if __name__ == "__main__":
             if sqm and lux < 0.2 and time_stamp.minute == 0 and time_stamp.second == 0:
                 measure_sky_brightness(sensor, radiometer_data_logger)
 
-        # An exception can occur if the light sensor saturates, so change the gain.
-        # Gain at GAIN_MED will allow measurements to be taken up to about 3000 lux
+        # An exception can occur if the light sensor saturates
         except Exception as e:
-            # print(e)
-            # print("Error reading from sensor")
+            if verbose:
+                print(e)
+
+            if not auto_gain:
+                continue
+
+            # Attempt to lower gain so that readings can continue
+            # Gain at GAIN_MED will allow measurements to be taken up to about 3000 lux
             if gain_level == adafruit_tsl2591.GAIN_MAX:
                 # sensor.disable()
                 sensor.adc_en_off()
