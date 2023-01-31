@@ -194,6 +194,8 @@ if __name__ == "__main__":
     gain_choices = ["max", "high", "med", "low", "auto"]
     ap.add_argument(
         "-g", "--gain", choices=gain_choices, type=str, default="auto", help="Gain level for the light sensor. Default is auto")
+    ap.add_argument("-m", "--multiplexer", type=int, default=None,
+                    help="Connect to the i2c sensor via an adafruit TCA9548A multiplexer using the number of the multiplexer channel e.g. 0-7")
     ap.add_argument("-n", "--name", type=str, default="",
                     help="Optional name of the sensor for the output file name. Default is no name")
     ap.add_argument("-s", "--sqm", action='store_true',
@@ -205,6 +207,7 @@ if __name__ == "__main__":
     i2c_address = args['address']
     gain_name = args['gain']
     device_name = args['name']
+    multiplexer = args['multiplexer']
     sqm = args['sqm']
     verbose = args['verbose']
 
@@ -219,9 +222,17 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, signalHandler)
     signal.signal(signal.SIGTERM, signalHandler)
 
-    # Open the sensor
+    # Open the i2c bus
     i2c = board.I2C()
-    sensor = adafruit_tsl2591_extended(i2c, address=i2c_address)
+
+    # Create the sensor or TCA9548A object and pass it the I2C bus
+    if multiplexer is not None:
+        import adafruit_tca9548a
+        tca = adafruit_tca9548a.TCA9548A(i2c)
+        # For the sensor on the multiplexer, create it using the TCA9548A channel instead of the I2C object
+        sensor = adafruit_tsl2591.TSL2591(tca[multiplexer])
+    else:
+        sensor = adafruit_tsl2591_extended(i2c, address=i2c_address)
 
     # Set gain and fastest integration time (100ms)
     sensor.enable()
@@ -233,6 +244,7 @@ if __name__ == "__main__":
 
     time.sleep(0.5)
 
+    # Create the data logger
     radiometer_data_logger = RadiometerDataLogger(name=device_name)
 
     while True:
