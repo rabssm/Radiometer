@@ -31,7 +31,7 @@ pip install adafruit-circuitpython-tca9548a
 python radiometer_tsl2591.py
 ```
 
-If using a TCA9548A multiplexer, specify the channel number that the light sesnor is connected to on the TCA9548A e.g.
+If using a TCA9548A multiplexer, specify the channel number that the light sensor is connected to on the TCA9548A e.g.
 ```
 python radiometer_tsl2591.py --multiplexer 0 --name MULTI0
 ```
