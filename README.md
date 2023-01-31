@@ -21,9 +21,19 @@ pip install board
 pip install adafruit-circuitpython-tsl2591
 ```
 
+If using the TCA9548A multiplexer to address more than one TSL2591 light sensor, you will also need to install the TCA9548A package
+```
+pip install adafruit-circuitpython-tca9548a
+```
+
 ## Running the radiometer data acquisition software
 ```
 python radiometer_tsl2591.py
+```
+
+If using a TCA9548A multiplexer, specify the channel number that the light sesnor is connected to on the TCA9548A e.g.
+```
+python radiometer_tsl2591.py --multiplexer 0 --name MULTI0
 ```
 
 ## Running the sky brightness/quality data acquisition software
