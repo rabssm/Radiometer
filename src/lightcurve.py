@@ -134,3 +134,28 @@ if __name__ == "__main__":
     plt.ylabel('Abs Magnitude')
     plt.gca().invert_yaxis()
     plt.show()
+
+
+    # Try using the raw visible data only
+    visible_data = df.Visible #  - df.IR
+    visible_data = visible_data - np.median(visible_data)
+    visible_data = visible_data[peak - (int(width/2)):peak+(int(width/2))]
+    times_of_visible_data = times[peak - (int(width/2)):peak+(int(width/2))]
+    gains_of_visible_data = df.Gain[peak - (int(width/2)):peak+(int(width/2))]
+
+    RE_WHITE_CHANNEL0 = 264.1
+    gain_factor = gains_of_visible_data/428    # datasheet says 9200/400
+    watts_per_square_meter = visible_data / (100 * RE_WHITE_CHANNEL0 * gain_factor)
+    powers = watts_per_square_meter * area
+    powers[powers < 0] = 0
+    angle_adjusted_powers = powers / np.cos(np.deg2rad(angle))
+    integrated_power = np.trapz(angle_adjusted_powers, x=np_times_over_peaks)
+
+    mass = 2 * integrated_power / (TAU * np.square(velocity))
+    print("Power and mass using raw visible sensor values:", integrated_power, mass)
+
+    magnitudes = -2.5*np.log10(angle_adjusted_powers/POWER_OF_MAG_ZERO_FIREBALL)
+
+    plt.plot(times_of_visible_data, magnitudes)
+    plt.gca().invert_yaxis()
+    plt.show()
