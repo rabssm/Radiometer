@@ -46,7 +46,7 @@ python sqm_tsl2591.py
 
 The output data file is a space-separated file containing the date, time, lux value, visible and IR sensor raw data, sensor gain setting, and sensor integration time in milliseconds.
 
-Note that the "Visible" and "IR" columns contain the channel 0 and channel 1 raw values from the sensors. The "Visible" data on channel 0 read from the Adafruit TSL2591 library is actually the sum of the counts from both the visible and IR sensors.
+Note that the "Visible" and "IR" columns contain the channel 0 and channel 1 raw values from the sensors. The "Visible" data on channel 0 read from the Adafruit TSL2591 library is the counts from the visible sensor, which is sensitive to both visible and IR.
 ```
               Date          Time          Lux  Visible    IR    Gain  IntTime
 0       2022/12/24  00:00:02.630     0.002661       13     4  9876.0    100.0
