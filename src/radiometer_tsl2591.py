@@ -106,7 +106,7 @@ class RadiometerDataLogger():
 # Add a get_light_levels method to the adafruit_tsl2591 class
 class adafruit_tsl2591_extended(adafruit_tsl2591.TSL2591):
 
-    def get_light_levels(self):
+    def get_light_levels(self, disable_exception=False):
         """Read the sensor and calculate a lux value from both its infrared
         and visible light channels.
 
@@ -131,7 +131,8 @@ class adafruit_tsl2591_extended(adafruit_tsl2591.TSL2591):
                 "Overflow reading light channels!, Try to reduce the gain of\n "
                 + "the sensor using adafruit_tsl2591.GAIN_LOW"
             )
-            raise RuntimeError(message)
+            if not disable_exception:
+                raise RuntimeError(message)
         # Calculate lux using same equation as Arduino library:
         #  https://github.com/adafruit/Adafruit_TSL2591_Library/blob/master/Adafruit_TSL2591.cpp
         again = 1.0
@@ -293,6 +294,13 @@ if __name__ == "__main__":
             # Attempt to lower gain so that readings can continue
             # Gain at GAIN_MED will allow measurements to be taken up to about 3000 lux
             if gain_level == adafruit_tsl2591.GAIN_MAX:
+
+                # Log the sensor values anyway even though there has been an exception as the IR sensor values may still be useful.
+                if prev_lux > 0:
+                   lux, vis_level, ir_level, again, atime = sensor.get_light_levels(disable_exception=True)
+                   radiometer_data_logger.log_data(
+                        time_stamp, prev_lux, vis_level, ir_level, again, atime)
+
                 # sensor.disable()
                 sensor.adc_en_off()
                 gain_level = adafruit_tsl2591.GAIN_MED
