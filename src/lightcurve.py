@@ -22,16 +22,20 @@ LUMINOUS_EFFICACY = 0.0079
 # Power of a magnitude 0 fireball is 1500 Watts
 POWER_OF_MAG_ZERO_FIREBALL = 1500
 
+# Minimum magnitude detectable with the sensor
+MIN_MAGNITUDE = -6.0
+
 # Main program
 if __name__ == "__main__":
 
     # Construct the argument parser and parse the arguments
     ap = argparse.ArgumentParser(
-        description='Analyse a light curve from the radiometer data')
+        description='Analyse a light curve from the radiometer data',
+        epilog='Example usage: python lightcurve.py -p 0.01 -w 40 -d 120000 -a 50 -v 12000 20230131_0001.csv')
     ap.add_argument("file", type=str, nargs='*',
                     help="File or directory to analyse. Default is last 2 files in the directory " + CAPTURE_DIR)
-    ap.add_argument("-p", "--prominence", type=float, default=0.005,
-                    help="Peak detection prominence above background. Default is 0.005 lux")
+    ap.add_argument("-p", "--prominence", type=float, default=0.0,
+                    help="Peak detection prominence above background. Default is auto")
     ap.add_argument("-w", "--width", type=int, default=10,
                     help="Number of points to analyse around the peak. Default is 10")
     ap.add_argument("-d", "--distance", type=float, default=50000,
@@ -57,6 +61,9 @@ if __name__ == "__main__":
     print("Graphing", file_names)
     print("Initial parameters. Distance:", distance, "Angle:", angle)
 
+    # Ignore div by zero warnings
+    np.seterr(divide='ignore')
+
     # Collect the data into a pandas dataframe
     columns = ["Date", "Time", "Lux", "Visible", "IR", "Gain", "IntTime"]
     dfs = [pd.read_csv(file_name, sep=' ', names=columns)
@@ -67,7 +74,9 @@ if __name__ == "__main__":
     times = pd.to_datetime(df.Date + " " + df.Time,
                            format="%Y/%m/%d %H:%M:%S.%f")
 
-    # Find peaks in the data
+    # Find peaks in the data. If no prominence is given, calculate one
+    if prominence == 0.0:
+        prominence = np.max(df.Lux) - np.median(df.Lux) - np.std(df.Lux)
     peaks = []
     peaks, properties = find_peaks(
         df.Lux, prominence=prominence)  # , width=3)
@@ -92,7 +101,7 @@ if __name__ == "__main__":
           df.Lux[peak], "STD", np.std(df.Lux))
     integrated_lux = np.trapz(median_adjusted_lux, x=np_times_over_peaks)
     # , simpson(adjusted_peaks))
-    print("Area under peak:", integrated_lux, "Lux")
+    print("Area under peak:", integrated_lux, "Lux.s")
     lux_results = np.array([integrated_lux, np.std(df.Lux)])
 
     # Calculate the energy and mass
@@ -124,6 +133,7 @@ if __name__ == "__main__":
         area * LUMINOUS_EFFICACY
     powers[powers < 0] = 0
     magnitudes = -2.5*np.log10(powers/POWER_OF_MAG_ZERO_FIREBALL)
+    magnitudes[magnitudes == np.inf] = MIN_MAGNITUDE
 
     integrated_power = np.trapz(powers, x=np_times_over_peaks)
     mass = 2 * integrated_power / (TAU * np.square(velocity))
@@ -135,9 +145,8 @@ if __name__ == "__main__":
     plt.gca().invert_yaxis()
     plt.show()
 
-
     # Try using the raw visible data only
-    visible_data = df.Visible #  - df.IR
+    visible_data = df.Visible  # - df.IR
     visible_data = visible_data - np.median(visible_data)
     visible_data = visible_data[peak - (int(width/2)):peak+(int(width/2))]
     times_of_visible_data = times[peak - (int(width/2)):peak+(int(width/2))]
@@ -145,17 +154,24 @@ if __name__ == "__main__":
 
     RE_WHITE_CHANNEL0 = 264.1
     gain_factor = gains_of_visible_data/428    # datasheet says 9200/400
-    watts_per_square_meter = visible_data / (100 * RE_WHITE_CHANNEL0 * gain_factor)
+    watts_per_square_meter = visible_data / \
+        (100 * RE_WHITE_CHANNEL0 * gain_factor)
     powers = watts_per_square_meter * area
     powers[powers < 0] = 0
     angle_adjusted_powers = powers / np.cos(np.deg2rad(angle))
     integrated_power = np.trapz(angle_adjusted_powers, x=np_times_over_peaks)
 
     mass = 2 * integrated_power / (TAU * np.square(velocity))
-    print("Power and mass using raw visible sensor values:", integrated_power, mass)
+    print("Estimated mass from raw sensor data", np.around(mass, 2), "kg")
 
-    magnitudes = -2.5*np.log10(angle_adjusted_powers/POWER_OF_MAG_ZERO_FIREBALL)
+    magnitudes = -2.5*np.log10(angle_adjusted_powers /
+                               POWER_OF_MAG_ZERO_FIREBALL)
+
+    magnitudes[magnitudes == np.inf] = MIN_MAGNITUDE
 
     plt.plot(times_of_visible_data, magnitudes)
+    plt.title("Magnitude from Raw Visible Sensor Data")
+    plt.xlabel('Time')
+    plt.ylabel('Abs Magnitude')
     plt.gca().invert_yaxis()
     plt.show()
