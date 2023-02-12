@@ -14,11 +14,15 @@ There is also a script to monitor sky quality, by measuring the sky brightness. 
 The data is written to a dated file in the ~/radiometer_data/ directory. For example, the file R20221127.csv contains the light level data for 2022-11-27, with a timestamp for each reading. The timestamps are the times at the end of each lux reading.
 
 ## Installation
-This python software requires the following additional python modules to be installed using pip
+This python software requires the following additional python modules to be installed using pip for python3:
 ```
 pip install RPi.GPIO
 pip install board
 pip install adafruit-circuitpython-tsl2591
+
+# For the graph ad lightcurve tools, install pandas and scipy
+pip install pandas
+pip install scipy
 ```
 
 If using the TCA9548A multiplexer to address more than one TSL2591 light sensor, you will also need to install the TCA9548A package
