@@ -20,7 +20,7 @@ pip install RPi.GPIO
 pip install board
 pip install adafruit-circuitpython-tsl2591
 
-# For the graph ad lightcurve tools, install pandas and scipy
+# For the graph and lightcurve tools, install pandas and scipy
 pip install pandas
 pip install scipy
 ```
