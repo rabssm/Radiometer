@@ -19,8 +19,10 @@ This python software requires the following additional python modules to be inst
 pip install RPi.GPIO
 pip install board
 pip install adafruit-circuitpython-tsl2591
+```
 
-# For the graph and lightcurve tools, install pandas and scipy
+For the graph and lightcurve tools, install pandas and scipy
+```
 pip install pandas
 pip install scipy
 ```
@@ -35,9 +37,11 @@ pip install adafruit-circuitpython-tca9548a
 python radiometer_tsl2591.py
 ```
 
-If using a TCA9548A multiplexer, specify the channel number that the light sensor is connected to on the TCA9548A e.g.
+If using a TCA9548A multiplexer, specify the channel number that the light sensor is connected to on the TCA9548A. For example, to run using 3 sensors at different fixed gains using a TCA9548A multiplexer:
 ```
-python radiometer_tsl2591.py --multiplexer 0 --name MULTI0
+python radiometer_tsl2591.py --multiplexer 0 --gain max --name GAIN_MAX
+python radiometer_tsl2591.py --multiplexer 1 --gain med --name GAIN_MED
+python radiometer_tsl2591.py --multiplexer 2 --gain low --name GAIN_LOW
 ```
 
 ## Running the sky brightness/quality data acquisition software
