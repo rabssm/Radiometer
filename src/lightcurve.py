@@ -89,7 +89,7 @@ if __name__ == "__main__":
         print(df.Time[peak], df.Lux[peak])
 
     # Calculate area under the peak
-    print(peaks, properties)
+    # print(peaks, properties)
     median_adjusted_lux = df.Lux[peak -
                                  (int(width/2)):peak+(int(width/2))]-np.median(df.Lux)
     median_adjusted_lux[median_adjusted_lux < 0] = 0
@@ -145,6 +145,17 @@ if __name__ == "__main__":
     plt.gca().invert_yaxis()
     plt.show()
 
+
+    # Plot the visible and IR data vs time
+    plt.xlabel('Time')
+    plt.ylabel('Count')
+    plt.plot(times, df.Visible, label="Visible and IR")
+    plt.plot(times, df.IR, label="IR")
+    plt.title('Raw sensor values')
+    plt.legend(loc='upper left')
+    plt.show()
+    
+
     # Try using the raw visible data only
     visible_data = df.Visible  # - df.IR
     visible_data = visible_data - np.median(visible_data)
@@ -162,6 +173,7 @@ if __name__ == "__main__":
     integrated_power = np.trapz(angle_adjusted_powers, x=np_times_over_peaks)
 
     mass = 2 * integrated_power / (TAU * np.square(velocity))
+    print("Estimated energy from raw sensor data", '{:.2E}'.format(integrated_power) , "J")
     print("Estimated mass from raw sensor data", np.around(mass, 2), "kg")
 
     magnitudes = -2.5*np.log10(angle_adjusted_powers /
