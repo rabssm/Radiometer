@@ -116,7 +116,7 @@ if __name__ == "__main__":
     plt.ylabel('Count')
     if not linear_scale:
         plt.yscale("log")
-    plt.plot(times, df.Visible, label="Visible+IR")
+    plt.plot(times, df.Visible, label="Visible and IR")
     plt.plot(times, df.IR, label="IR")
     plt.title('Raw sensor values')
     plt.legend(loc='upper left')
