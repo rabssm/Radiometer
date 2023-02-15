@@ -22,6 +22,13 @@ LUMINOUS_EFFICACY = 0.0079
 # Power of a magnitude 0 fireball is 1500 Watts
 POWER_OF_MAG_ZERO_FIREBALL = 1500
 
+# Re irradiance responsivity from TSL2591 datasheet, white light on "visible" sensor channel 0
+# The 100 scaling factor is to convert the RE_WHITE_CHANNEL0 from the datsheet units of counts/(μW/cm2) to counts/(W/m2)
+RE_WHITE_CHANNEL0 = 264.1 * 100
+
+# High gain factor 428x from https://github.com/adafruit/Adafruit_CircuitPython_TSL2591/blob/main/adafruit_tsl2591.py
+GAIN_HIGH = 428
+
 # Minimum magnitude detectable with the sensor
 MIN_MAGNITUDE = -6.0
 
@@ -145,7 +152,6 @@ if __name__ == "__main__":
     plt.gca().invert_yaxis()
     plt.show()
 
-
     # Plot the visible and IR data vs time
     plt.xlabel('Time')
     plt.ylabel('Count')
@@ -154,26 +160,37 @@ if __name__ == "__main__":
     plt.title('Raw sensor values')
     plt.legend(loc='upper left')
     plt.show()
-    
 
-    # Try using the raw visible data only
-    visible_data = df.Visible  # - df.IR
+    # Calculate energy and mass using the raw channel 0 data which includes visble and IR
+    visible_data = df.Visible
     visible_data = visible_data - np.median(visible_data)
+
+    # Restrict the data to values either side of the peak
     visible_data = visible_data[peak - (int(width/2)):peak+(int(width/2))]
     times_of_visible_data = times[peak - (int(width/2)):peak+(int(width/2))]
     gains_of_visible_data = df.Gain[peak - (int(width/2)):peak+(int(width/2))]
 
-    RE_WHITE_CHANNEL0 = 264.1
-    gain_factor = gains_of_visible_data/428    # datasheet says 9200/400
-    watts_per_square_meter = visible_data / \
-        (100 * RE_WHITE_CHANNEL0 * gain_factor)
+    # Calculate the gain scaling
+    # The RE_WHITE_CHANNEL0 measured in the datasheet is measured at high gain, so divide by the GAIN_HIGH factor
+    # Note: datasheet says the gain scaling for max gain is 9200/400
+    gain_scaling = gains_of_visible_data/GAIN_HIGH
+
+    # Get watts/m2.
+    watts_per_square_meter = visible_data / (RE_WHITE_CHANNEL0 * gain_scaling)
     powers = watts_per_square_meter * area
+
+    # Remove any powers that may be negative
     powers[powers < 0] = 0
+
+    # Adjust the powers for the incident angle of the light with the sensor
     angle_adjusted_powers = powers / np.cos(np.deg2rad(angle))
+
+    # Integrate the power over time to get the energy under the light curve
     integrated_power = np.trapz(angle_adjusted_powers, x=np_times_over_peaks)
 
     mass = 2 * integrated_power / (TAU * np.square(velocity))
-    print("Estimated energy from raw sensor data", '{:.2E}'.format(integrated_power) , "J")
+    print("Estimated energy from raw sensor data",
+          '{:.2E}'.format(integrated_power), "J")
     print("Estimated mass from raw sensor data", np.around(mass, 2), "kg")
 
     magnitudes = -2.5*np.log10(angle_adjusted_powers /
@@ -181,6 +198,16 @@ if __name__ == "__main__":
 
     magnitudes[magnitudes == np.inf] = MIN_MAGNITUDE
 
+    print("Peak magnitude", np.around(np.min(magnitudes), 2))
+
+    # Plot power graph
+    plt.plot(times_of_visible_data, powers)
+    plt.title("Power from Raw Visible Sensor Data")
+    plt.xlabel('Time')
+    plt.ylabel('Power (Watts)')
+    plt.show()
+
+    # Plot graph of magnitudes
     plt.plot(times_of_visible_data, magnitudes)
     plt.title("Magnitude from Raw Visible Sensor Data")
     plt.xlabel('Time')
