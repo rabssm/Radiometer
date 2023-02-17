@@ -7,6 +7,7 @@ import time
 import numpy as np
 import syslog
 import board
+from adafruit_extended_bus import ExtendedI2C as I2C
 import adafruit_tsl2591
 
 DATA_DIR = os.path.expanduser('~/radiometer_data/')
@@ -192,6 +193,8 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description='Acquire light levels')
     ap.add_argument("-a", "--address", type=lambda x: int(x, 0), default=DEFAULT_I2C_ADDRESS,
                     help="Set the light sensor's i2c address. Default is " + hex(DEFAULT_I2C_ADDRESS))
+    ap.add_argument("-b", "--bus", type=int, default=1,
+                    help="Specify the i2c bus used for connecting the sensor e.g. 3 if /dev/i2c-3 has been created using dtoverlay. Default is bus 1" )
     gain_choices = ["max", "high", "med", "low", "auto"]
     ap.add_argument(
         "-g", "--gain", choices=gain_choices, type=str, default="auto", help="Gain level for the light sensor. Default is auto")
@@ -206,6 +209,7 @@ if __name__ == "__main__":
     args = vars(ap.parse_args())
 
     i2c_address = args['address']
+    i2c_bus = args['bus']
     gain_name = args['gain']
     device_name = args['name']
     multiplexer = args['multiplexer']
@@ -224,7 +228,7 @@ if __name__ == "__main__":
     signal.signal(signal.SIGTERM, signalHandler)
 
     # Open the i2c bus
-    i2c = board.I2C()
+    i2c = I2C(i2c_bus)
 
     # Create the sensor or TCA9548A object and pass it the I2C bus
     if multiplexer is not None:
