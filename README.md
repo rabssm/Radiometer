@@ -6,6 +6,32 @@ A Raspberry Pi Zero or Raspberry Pi 4 running the latest release of Raspbian. Th
 There is a track on the back of the TSL2591 PCB which should be cut to disable the bright LED on the front of the board.
 As the Raspberry Pi needs to be mounted close to the sensor, the LED's on the Raspberry Pi should also be switched off to remove any source of extraneous light.
 
+### I2C Ports and Configuration
+If using just one sensor, then the sensor can be connected to the normal I2C SDA pin 3 and SCL pin 5 on the Pi's GPIO. The power for the sensor is connected to pin 1 (3.3V) and pin 9 (GND)
+
+If connecting more than one sensor to one RPi, we can use the dtoverlay to assign extra I2C ports on the GPIO bus. To do this, we add the following line(s) to the /boot/config.txt file.
+```
+# Add extra i2c ports for pins 23 and 24 of the GPIO bus
+dtoverlay=i2c-gpio,bus=3,i2c_gpio_delay_us=2,i2c_gpio_sda=23,i2c_gpio_scl=24
+
+# Add extra i2c ports for pins 17 and 27 of the GPIO bus
+dtoverlay=i2c-gpio,bus=4,i2c_gpio_delay_us=2,i2c_gpio_sda=17,i2c_gpio_scl=27
+```
+
+This assigns pins 23 (SDA) and 24 (SCL) as additional I2C ports for I2C bus 3, and pins 17 (SDA) and 27 (SCL) as additional I2C ports for I2C bus 4.
+To check the additional I2C busses
+```
+sudo i2cdetect -l
+i2c-3	i2c       	3.i2c                           	I2C adapter
+i2c-1	i2c       	bcm2835 (i2c@7e804000)          	I2C adapter
+i2c-4	i2c       	4.i2c                           	I2C adapter
+```
+
+To use the alternative I2C busses, use the --bus option as described in the "Running the radiometer data acquisition software" below.
+
+More details about assigning extra I2C ports can be found at https://github.com/JJSlabbert/Raspberry_PI_i2C_conficts .
+
+
 ## Software
 Python 3 script to continuously read and log the light intensity levels in lux detected by an Adafruit TSL2591 digital light sensor. The integration time is set to the minimum time allowed by this device (100ms), which allows light levels to be read at 10 Hz. The gain is set to maximum, but in the event of the detector becoming saturated, the gain is changed to the medium setting, which should allow light levels to continue to be monitored in the event of very bright fireball events.
 
@@ -18,6 +44,7 @@ This python software requires the following additional python modules to be inst
 ```
 pip install RPi.GPIO
 pip install board
+pip install adafruit-extended-bus
 pip install adafruit-circuitpython-tsl2591
 ```
 
@@ -36,6 +63,14 @@ pip install adafruit-circuitpython-tca9548a
 ```
 python radiometer_tsl2591.py
 ```
+
+If using additional I2C busses for 2 additional sensors e.g. I2C busses 3 and 4 as well as the default bus 1:
+```
+python radiometer_tsl2591.py --bus 1 --gain max --name GAIN_MAX
+python radiometer_tsl2591.py --bus 3 --gain med --name GAIN_MED
+python radiometer_tsl2591.py --bus 4 --gain low --name GAIN_LOW
+```
+
 
 If using a TCA9548A multiplexer, specify the channel number that the light sensor is connected to on the TCA9548A. For example, to run using 3 sensors at different fixed gains using a TCA9548A multiplexer:
 ```
