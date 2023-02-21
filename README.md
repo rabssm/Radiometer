@@ -1,13 +1,14 @@
 # Radiometer for measuring fireball light intensities using an Adafruit TSL2591 digital light sensor
 
 ## Hardware
-A Raspberry Pi Zero or Raspberry Pi 4 running the latest release of Raspbian. The TSL2591 is connected to the power and I2C pins of the GPIO bus as described in the Adafruit manuals for the TSL2591.
+A Raspberry Pi Zero, 2, 3 or 4 running the latest release of Raspbian.
+A TSL2591 light sensor with I2C data and power connectors.
 
 There is a track on the back of the TSL2591 PCB which should be cut to disable the bright LED on the front of the board.
 As the Raspberry Pi needs to be mounted close to the sensor, the LED's on the Raspberry Pi should also be switched off to remove any source of extraneous light.
 
 ### I2C Ports and Configuration
-If using just one sensor, then the sensor can be connected to the normal I2C SDA pin 3 and SCL pin 5 on the Pi's GPIO. The power for the sensor is connected to pin 1 (3.3V) and pin 9 (GND)
+If using just one sensor, the sensor can be connected to the normal I2C SDA pin 3 and SCL pin 5 on the Pi's GPIO. The power for the sensor is connected to pin 1 (3.3V) and pin 9 (GND)
 
 If connecting more than one sensor to one RPi, we can use the dtoverlay to assign extra I2C ports on the GPIO bus. To do this, we add the following line(s) to the /boot/config.txt file.
 ```
@@ -33,7 +34,11 @@ More details about assigning extra I2C ports can be found at https://github.com/
 
 
 ## Software
-Python 3 script to continuously read and log the light intensity levels in lux detected by an Adafruit TSL2591 digital light sensor. The integration time is set to the minimum time allowed by this device (100ms), which allows light levels to be read at 10 Hz. The gain is set to maximum, but in the event of the detector becoming saturated, the gain is changed to the medium setting, which should allow light levels to continue to be monitored in the event of very bright fireball events.
+Python 3 script to continuously read and log the light intensity levels in lux detected by an Adafruit TSL2591 digital light sensor. The integration time is set to the minimum time allowed by this device (100ms), which allows light levels to be read at 10 Hz.
+
+By default, the gain is automatically controlled and is initially set to maximum. In the event of the detector becoming saturated, the gain is changed to the medium setting, which should allow light levels to continue to be monitored up to a brightness of 3000 Lux in the event of very bright fireball events.
+
+The gain can also be set to a fixed value using the --gain command line option.
 
 There is also a script to monitor sky quality, by measuring the sky brightness. This uses the longest integration time available for the device (600ms), so that there are more counts detected in very dark conditions. This increased integration time should allow sky brightness measurements down to 22 mpsas.
 
