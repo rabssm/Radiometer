@@ -39,12 +39,12 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(
         description='Analyse a light curve from the radiometer data',
         epilog='Example usage: python lightcurve.py -p 0.01 -w 40 -d 120000 -a 50 -v 12000 20230131_0001.csv')
-    ap.add_argument("file", type=str, nargs='*',
-                    help="File or directory to analyse. Default is last 2 files in the directory " + CAPTURE_DIR)
+    ap.add_argument("file", type=str, nargs='+',
+                    help="File to analyse")
     ap.add_argument("-p", "--prominence", type=float, default=0.0,
                     help="Peak detection prominence above background. Default is auto")
-    ap.add_argument("-w", "--width", type=int, default=10,
-                    help="Number of points to analyse around the peak. Default is 10")
+    ap.add_argument("-w", "--width", type=int, default=40,
+                    help="Number of points to analyse around the peak. Default is 40")
     ap.add_argument("-d", "--distance", type=float, default=50000,
                     help="Straight line distance to meteor in meters. Default is 50000 m")
     ap.add_argument("-a", "--angle", type=float, default=45,
@@ -61,12 +61,8 @@ if __name__ == "__main__":
     angle = args['angle']
     velocity = args['velocity']
 
-    # If no filenames were given, use the 2 newest files
-    if len(file_names) == 0:
-        file_names = sorted(glob.glob(CAPTURE_DIR + "R*.csv*"))[-2:]
-
     print("Graphing", file_names)
-    print("Initial parameters. Distance:", distance, "Angle:", angle)
+    print("Initial parameters.\nDistance (m):", distance, "\nAngle (degrees):", angle, "\nVelocity (m/s):", velocity)
 
     # Ignore div by zero warnings
     np.seterr(divide='ignore')
@@ -155,8 +151,8 @@ if __name__ == "__main__":
     # Plot the visible and IR data vs time
     plt.xlabel('Time')
     plt.ylabel('Count')
-    plt.plot(times, df.Visible, label="Visible and IR")
-    plt.plot(times, df.IR, label="IR")
+    plt.plot(times, df.Visible, label="Visible and IR", marker='.')
+    plt.plot(times, df.IR, label="IR", marker='.')
     plt.title('Raw sensor values')
     plt.legend(loc='upper left')
     plt.show()
@@ -201,14 +197,14 @@ if __name__ == "__main__":
     print("Peak magnitude", np.around(np.min(magnitudes), 2))
 
     # Plot power graph
-    plt.plot(times_of_visible_data, powers)
+    plt.plot(times_of_visible_data, powers, marker='.')
     plt.title("Power from Raw Visible Sensor Data")
     plt.xlabel('Time')
     plt.ylabel('Power (Watts)')
     plt.show()
 
     # Plot graph of magnitudes
-    plt.plot(times_of_visible_data, magnitudes)
+    plt.plot(times_of_visible_data, magnitudes, marker='.')
     plt.title("Magnitude from Raw Visible Sensor Data")
     plt.xlabel('Time')
     plt.ylabel('Abs Magnitude')
