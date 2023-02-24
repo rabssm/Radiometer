@@ -199,12 +199,12 @@ if __name__ == "__main__":
           '{:.2E}'.format(integrated_power), "J")
     print("Estimated mass from raw sensor data", np.around(mass, 2), "kg")
 
-    magnitudes = -2.5*np.log10(extinction_adjusted_powers /
+    magnitudes_raw = -2.5*np.log10(extinction_adjusted_powers /
                                POWER_OF_MAG_ZERO_FIREBALL)
 
-    magnitudes[magnitudes == np.inf] = MIN_MAGNITUDE
+    magnitudes_raw[magnitudes_raw == np.inf] = MIN_MAGNITUDE
 
-    print("Peak magnitude", np.around(np.min(magnitudes), 2))
+    print("Peak magnitude", np.around(np.min(magnitudes_raw), 2))
 
     # Plot power graph
     plt.plot(times_of_visible_data, powers, marker='.')
@@ -214,9 +214,12 @@ if __name__ == "__main__":
     plt.show()
 
     # Plot graph of magnitudes
-    plt.plot(times_of_visible_data, magnitudes, marker='.')
-    plt.title("Magnitude from Raw Visible Sensor Data")
+    plt.plot(times_of_visible_data, magnitudes, label="Lux Data", marker='.')
+    plt.plot(times_of_visible_data, magnitudes_raw, label="Raw Visible Sensor Data", marker='.')
+    plt.title("Magnitudes")
     plt.xlabel('Time')
     plt.ylabel('Abs Magnitude')
     plt.gca().invert_yaxis()
+    plt.legend(loc='upper left')
+
     plt.show()
