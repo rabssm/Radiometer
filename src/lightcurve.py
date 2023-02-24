@@ -49,6 +49,8 @@ if __name__ == "__main__":
                     help="Straight line distance to meteor in meters. Default is 50000 m")
     ap.add_argument("-a", "--angle", type=float, default=45,
                     help="Incident angle of meteor with sensor in degrees. Default is 45 degrees")
+    ap.add_argument("-e", "--extinction", type=float, default=0.0,
+                    help="Atmospheric extinction in magnitudes. Default is 0 magnitudes extinctions")
     ap.add_argument("-v", "--velocity", type=float, default=15000,
                     help="Velocity in m/s. Default is 15000 m/s")
 
@@ -59,10 +61,13 @@ if __name__ == "__main__":
     width = args['width']
     distance = args['distance']
     angle = args['angle']
+    extinction = args['extinction']
     velocity = args['velocity']
 
     print("Graphing", file_names)
-    print("Initial parameters.\nDistance (m):", distance, "\nAngle (degrees):", angle, "\nVelocity (m/s):", velocity)
+    print("Initial parameters.\nDistance (m):", distance,
+          "\nAngle (degrees):", angle, "\nAtmospheric Extinction", extinction, "\nVelocity (m/s):", velocity)
+    print()
 
     # Ignore div by zero warnings
     np.seterr(divide='ignore')
@@ -104,18 +109,30 @@ if __name__ == "__main__":
           df.Lux[peak], "STD", np.std(df.Lux))
     integrated_lux = np.trapz(median_adjusted_lux, x=np_times_over_peaks)
     # , simpson(adjusted_peaks))
-    print("Area under peak:", integrated_lux, "Lux.s")
-    lux_results = np.array([integrated_lux, np.std(df.Lux)])
+    print("Area under peak:", integrated_lux, "Lux.s\n")
 
-    # Calculate the energy and mass
+    # Calculate the area of the sphere at that distance
     area = 4 * np.pi * np.square(distance)
-    angle_adjusted_lux = lux_results / np.cos(np.deg2rad(angle))
-    total_energy = angle_adjusted_lux * area * LUMINOUS_EFFICACY
-    mass = 2 * total_energy / (TAU * np.square(velocity))
 
-    print("Estimated energy:", total_energy)
-    print("Estimated mass:", np.around(
-        mass[0], 2), "+/-", np.around(mass[1], 3), "kg")
+    # Adjust the lux values for incident angle with the sensor
+    angle_adjusted_lux = median_adjusted_lux / np.cos(np.deg2rad(angle))
+
+    # Adjust the lux values for atmospheric extinction
+    extinction_adjusted_lux = angle_adjusted_lux * np.power(2.5, extinction)
+
+    # Calculate the power and magnitude over the light curve
+    powers = extinction_adjusted_lux * area * LUMINOUS_EFFICACY
+    powers[powers < 0] = 0
+    magnitudes = -2.5*np.log10(powers/POWER_OF_MAG_ZERO_FIREBALL)
+    magnitudes[magnitudes == np.inf] = MIN_MAGNITUDE
+
+    integrated_power = np.trapz(powers, x=np_times_over_peaks)
+    mass = 2 * integrated_power / (TAU * np.square(velocity))
+
+    print("Estimated energy:", np.around(integrated_power, 2), "J")
+    print("Estimated mass:", np.around(mass, 2), "kg")
+    print("Peak magnitude", np.around(np.min(magnitudes), 2))
+    print()
 
     # Plot the lux data vs time
     plt.plot(times, df.Lux)
@@ -130,16 +147,6 @@ if __name__ == "__main__":
 
     plt.title('Illuminance')
     plt.show()
-
-    # Calculate the power and magnitude over the light curve
-    powers = (median_adjusted_lux / np.cos(np.deg2rad(angle))) * \
-        area * LUMINOUS_EFFICACY
-    powers[powers < 0] = 0
-    magnitudes = -2.5*np.log10(powers/POWER_OF_MAG_ZERO_FIREBALL)
-    magnitudes[magnitudes == np.inf] = MIN_MAGNITUDE
-
-    integrated_power = np.trapz(powers, x=np_times_over_peaks)
-    mass = 2 * integrated_power / (TAU * np.square(velocity))
 
     # Plot the magnitudes
     plt.plot(times_over_peaks, magnitudes)
@@ -181,15 +188,18 @@ if __name__ == "__main__":
     # Adjust the powers for the incident angle of the light with the sensor
     angle_adjusted_powers = powers / np.cos(np.deg2rad(angle))
 
+    # Adjust the powers for atmospheric extinction
+    extinction_adjusted_powers = angle_adjusted_powers * np.power(2.5, extinction)
+
     # Integrate the power over time to get the energy under the light curve
-    integrated_power = np.trapz(angle_adjusted_powers, x=np_times_over_peaks)
+    integrated_power = np.trapz(extinction_adjusted_powers, x=np_times_over_peaks)
 
     mass = 2 * integrated_power / (TAU * np.square(velocity))
     print("Estimated energy from raw sensor data",
           '{:.2E}'.format(integrated_power), "J")
     print("Estimated mass from raw sensor data", np.around(mass, 2), "kg")
 
-    magnitudes = -2.5*np.log10(angle_adjusted_powers /
+    magnitudes = -2.5*np.log10(extinction_adjusted_powers /
                                POWER_OF_MAG_ZERO_FIREBALL)
 
     magnitudes[magnitudes == np.inf] = MIN_MAGNITUDE
