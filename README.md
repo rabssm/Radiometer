@@ -20,7 +20,7 @@ dtoverlay=i2c-gpio,bus=4,i2c_gpio_delay_us=2,i2c_gpio_sda=17,i2c_gpio_scl=27
 ```
 
 This assigns pins 23 (SDA) and 24 (SCL) as additional I2C ports for I2C bus 3, and pins 17 (SDA) and 27 (SCL) as additional I2C ports for I2C bus 4.
-To check the additional I2C busses
+To check the additional I2C buses
 ```
 sudo i2cdetect -l
 i2c-3	i2c       	3.i2c                           	I2C adapter
@@ -28,7 +28,7 @@ i2c-1	i2c       	bcm2835 (i2c@7e804000)          	I2C adapter
 i2c-4	i2c       	4.i2c                           	I2C adapter
 ```
 
-To use the alternative I2C busses, use the --bus option as described in the "Running the radiometer data acquisition software" below.
+To use the alternative I2C buses, use the --bus option as described in the "Running the radiometer data acquisition software" below.
 
 More details about assigning extra I2C ports can be found at https://github.com/JJSlabbert/Raspberry_PI_i2C_conficts .
 
@@ -69,7 +69,7 @@ pip install adafruit-circuitpython-tca9548a
 python radiometer_tsl2591.py
 ```
 
-If using additional I2C busses for 2 additional sensors e.g. I2C busses 3 and 4 as well as the default bus 1:
+If using additional I2C buses for 2 additional sensors e.g. I2C buses 3 and 4 as well as the default bus 1:
 ```
 python radiometer_tsl2591.py --bus 1 --gain max --name GAIN_MAX
 python radiometer_tsl2591.py --bus 3 --gain med --name GAIN_MED
