@@ -14,7 +14,7 @@ CAPTURE_DIR = os.path.expanduser('~/radiometer_data/')
 ADAFRUIT_TSL2591_LUX_DF = 408.0
 
 # Tau for meteor mass calulation
-TAU = 0.005
+TAU = 0.05
 
 # Luminous efficacy
 LUMINOUS_EFFICACY = 0.0079
