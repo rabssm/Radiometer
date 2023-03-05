@@ -2,6 +2,7 @@
 
 ## Hardware
 A Raspberry Pi Zero, 2, 3 or 4 running the latest release of Raspbian.
+
 A TSL2591 light sensor with I2C data and power connectors.
 
 There is a track on the back of the TSL2591 PCB which should be cut to disable the bright LED on the front of the board.
@@ -36,12 +37,15 @@ More details about assigning extra I2C ports can be found at https://github.com/
 ## Software
 Python 3 script to continuously read and log the light intensity levels in lux detected by an Adafruit TSL2591 digital light sensor. The integration time is set to the minimum time allowed by this device (100ms), which allows light levels to be read at 10 Hz.
 
-By default, the gain is automatically controlled and is initially set to maximum. In the event of the detector becoming saturated, the gain is changed to the medium setting, which should allow light levels to continue to be monitored up to a brightness of 3000 Lux in the event of very bright fireball events.
+### Gain Settings
+By default, the gain is automatically controlled and is initially set to maximum. In the event of the detector becoming saturated, the gain is changed to the medium setting, which should allow light levels to continue to be monitored up to a brightness of 3000 Lux in the event of very bright fireball events. The downside of the auto gain setting is that there will be a gap of 200 ms between valid readings during the period when the detector was saturated and while the gain is changed.
 
 The gain can also be set to a fixed value using the --gain command line option.
 
+### Sky Quality Metering
 There is also a script to monitor sky quality, by measuring the sky brightness. This uses the longest integration time available for the device (600ms), so that there are more counts detected in very dark conditions. This increased integration time should allow sky brightness measurements down to 22 mpsas.
 
+### Data Output
 The data is written to a dated file in the ~/radiometer_data/ directory. For example, the file R20221127.csv contains the light level data for 2022-11-27, with a timestamp for each reading. The timestamps are the times at the end of each lux reading.
 
 ## Installation
