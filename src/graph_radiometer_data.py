@@ -48,11 +48,11 @@ if __name__ == "__main__":
            for file_name in file_names]
     df = pd.concat(dfs, ignore_index=True)
 
-    # Find peaks in the data
+    # Find peaks in the data that may match the light curve of a fireball
     peaks = []
     if prominence != 0:
         peaks, properties = find_peaks(
-            df.Lux, prominence=prominence)  # , width=3)
+            df.Lux, prominence=prominence, width=(1,60))
         print("Peaks found:", len(peaks))
         if (len(peaks) < 50):
             for peak in peaks:
