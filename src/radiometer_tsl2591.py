@@ -235,7 +235,7 @@ if __name__ == "__main__":
         import adafruit_tca9548a
         tca = adafruit_tca9548a.TCA9548A(i2c)
         # For the sensor on the multiplexer, create it using the TCA9548A channel instead of the I2C object
-        sensor = adafruit_tsl2591.TSL2591(tca[multiplexer])
+        sensor = adafruit_tsl2591_extended(tca[multiplexer])
     else:
         sensor = adafruit_tsl2591_extended(i2c, address=i2c_address)
 
