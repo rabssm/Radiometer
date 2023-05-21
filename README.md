@@ -88,6 +88,16 @@ python radiometer_tsl2591.py --multiplexer 1 --gain med --name GAIN_MED
 python radiometer_tsl2591.py --multiplexer 2 --gain low --name GAIN_LOW
 ```
 
+## Starting the radiometer data acquisition software on each reboot
+
+To get the lux meter to run on every reboot, add the following to your cron tasks using 'crontab -e'
+```
+@reboot sleep 30 && /usr/bin/python3 ~/source/Radiometer/src/radiometer_tsl2591.py 2>&1 | /usr/bin/logger -t radiometer_tsl2591.py
+ 
+```
+You may need to change the path to the python3 you are using, the path to the radiometer_tsl2591.py script, and add any command line options needed for additional sensors.
+
+
 ## Running the sky brightness/quality data acquisition software
 ```
 python sqm_tsl2591.py
