@@ -24,6 +24,19 @@ def signalHandler(signum, frame):
     os._exit(0)
 
 
+def reset_sensor(sensor, gain, integration_time):
+    # Sensor reset
+    if verbose:
+        print("Resetting sensor")
+    # sensor.disable()
+    sensor.reset()
+    sensor.gain = gain
+    sensor.enable()
+    sensor.integration_time = integration_time
+    # Wait for next interrupt
+    sensor.wait_interrupt()
+
+
 def measure_sky_brightness(sensor, radiometer_data_logger):
     # Measure sky brightness in mag/arcsec^2 using max integration time
     sensor.integration_time = adafruit_tsl2591.INTEGRATIONTIME_600MS
@@ -166,6 +179,19 @@ class adafruit_tsl2591_extended(adafruit_tsl2591.TSL2591):
             | adafruit_tsl2591._TSL2591_ENABLE_NPIEN,
         )
 
+    def reset(self):
+        # Perform a device reset
+        val = 0b10000000
+        # control = self._read_u8(adafruit_tsl2591._TSL2591_REGISTER_CONTROL)
+        # control &= 0b01111111
+        control = val
+
+        # A write to the reset register always generates an exception
+        try:
+            self._write_u8(adafruit_tsl2591._TSL2591_REGISTER_CONTROL, control)
+        except:
+            pass
+
     def clear_interrupts(self):
         # Clear ALS interrupts.
         with self._device as i2c:
@@ -194,7 +220,7 @@ if __name__ == "__main__":
     ap.add_argument("-a", "--address", type=lambda x: int(x, 0), default=DEFAULT_I2C_ADDRESS,
                     help="Set the light sensor's i2c address. Default is " + hex(DEFAULT_I2C_ADDRESS))
     ap.add_argument("-b", "--bus", type=int, default=1,
-                    help="Specify the i2c bus used for connecting the sensor e.g. 3 if /dev/i2c-3 has been created using dtoverlay. Default is bus 1" )
+                    help="Specify the i2c bus used for connecting the sensor e.g. 3 if /dev/i2c-3 has been created using dtoverlay. Default is bus 1")
     gain_choices = ["max", "high", "med", "low", "auto"]
     ap.add_argument(
         "-g", "--gain", choices=gain_choices, type=str, default="auto", help="Gain level for the light sensor. Default is auto")
@@ -292,7 +318,13 @@ if __name__ == "__main__":
             if verbose:
                 print(e)
 
+            # If there is an exception with fixed gain, reset the sensor every 1200 readings (120s)
             if not auto_gain:
+                saturation_counter += 1
+                if saturation_counter > 1200:
+                    reset_sensor(sensor, gain_level,
+                                 adafruit_tsl2591.INTEGRATIONTIME_100MS)
+                    saturation_counter = 0
                 continue
 
             # Attempt to lower gain so that readings can continue
@@ -301,8 +333,9 @@ if __name__ == "__main__":
 
                 # Log the sensor values anyway even though there has been an exception as the IR sensor values may still be useful.
                 if prev_lux > 0:
-                   lux, vis_level, ir_level, again, atime = sensor.get_light_levels(disable_exception=True)
-                   radiometer_data_logger.log_data(
+                    lux, vis_level, ir_level, again, atime = sensor.get_light_levels(
+                        disable_exception=True)
+                    radiometer_data_logger.log_data(
                         time_stamp, prev_lux, vis_level, ir_level, again, atime)
 
                 # sensor.disable()
@@ -315,11 +348,12 @@ if __name__ == "__main__":
                 sensor.wait_interrupt()
                 # time.sleep(GUARD_TIME)
 
-            # If the sensor has been saturated for a long time (120s), then stay asleep
+            # If the sensor has been saturated for a long time (120s), reset the sensor and then stay asleep
             else:
                 saturation_counter += 1
                 if saturation_counter > 1200:
-                    sensor.disable()
+                    reset_sensor(sensor, gain_level,
+                                 adafruit_tsl2591.INTEGRATIONTIME_100MS)
                     time.sleep(120)
 
                     # Take a reading at lowest gain, then set the gain back to medium
