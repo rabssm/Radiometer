@@ -23,6 +23,8 @@ if __name__ == "__main__":
                     help="Display with night readings range")
     ap.add_argument("-l", "--linear", action='store_true',
                     help="Display with linear scale")
+    ap.add_argument("-s", "--save", action='store_true',
+                    help="Save plot")
     # ap.add_argument("-s", "--sky", action='store_true',
     #                 help="Display sky brightness")
     ap.add_argument("-p", "--prominence", type=float, default=0,
@@ -34,7 +36,7 @@ if __name__ == "__main__":
     night_range = args['night']
     prominence = args['prominence']
     linear_scale = args['linear']
-    display_sky_brightness = True # args['sky']
+    save_figure = args['save']
 
     # If no filenames were given, use the 2 newest files
     if len(file_names) == 0:
@@ -52,7 +54,7 @@ if __name__ == "__main__":
     peaks = []
     if prominence != 0:
         peaks, properties = find_peaks(
-            df.Lux, prominence=prominence, width=(1,60))
+            df.Lux.clip(upper=4), prominence=prominence, width=(1, 60))
         print("Peaks found:", len(peaks))
         if (len(peaks) < 50):
             for peak in peaks:
@@ -83,6 +85,7 @@ if __name__ == "__main__":
         rolling[min_rolling_index]/108000)/-0.4, "mag/arcsec^2")
 
     # Plot the lux data vs time
+    plt.figure(figsize=(9, 6))
     plt.plot(times, df.Lux)
     plt.xlabel('Time')
     plt.ylabel('Lux')
@@ -91,25 +94,27 @@ if __name__ == "__main__":
     elif not linear_scale:
         plt.yscale("log")
 
-    # Plot the detected peaks if the lux value is less than 4
+    # Plot the detected peaks
     if len(peaks) > 0:
-        plt.plot(times[peaks[df.Lux[peaks] < 4.0]],
-                 df.Lux[peaks[df.Lux[peaks] < 4.0]], marker="o", ls="", ms=3)
+        plt.plot(times[peaks],
+                 df.Lux[peaks], marker="o", ls="", ms=3)
 
     plt.title('Illuminance')
+    if save_figure:
+        plt.savefig(os.path.splitext(file_names[-1])[0] + '.png')
+        exit(0)
     plt.show()
 
     # Display sky brightness and rolling average
-    if display_sky_brightness:
-        sky_brightness = np.log10(df.Lux/108000)/-0.4
-        plt.plot(times, sky_brightness, label="Sky Brightness")
-        plt.plot(times, np.log10(rolling/108000)/-0.4, label="Rolling average")
-        plt.xlabel('Time')
-        plt.ylabel(r'Mag/$arcsec^2$ (mpsas)')
+    sky_brightness = np.log10(df.Lux/108000)/-0.4
+    plt.plot(times, sky_brightness, label="Sky Brightness")
+    plt.plot(times, np.log10(rolling/108000)/-0.4, label="Rolling average")
+    plt.xlabel('Time')
+    plt.ylabel(r'Mag/$arcsec^2$ (mpsas)')
 
-        plt.title('Sky Brightness')
-        plt.legend(loc='lower left')
-        plt.show()
+    plt.title('Sky Brightness')
+    plt.legend(loc='lower left')
+    plt.show()
 
     # Plot the visible and IR data vs time
     plt.xlabel('Time')
@@ -125,11 +130,11 @@ if __name__ == "__main__":
     # Calculate average measured integration times
     res = np.diff(times)[::2].astype(np.int32)
     res1 = res[res < 140000000]
-    if len(res1) > 0 :
+    if len(res1) > 0:
         m = res1.mean()/1e6
         print("Average measured times between readings for 100ms int time", m, "ms")
     res1 = res[res > 560000000]
     res2 = res1[res1 < 640000000]
-    if len(res2) > 0 :
+    if len(res2) > 0:
         m = res2.mean()/1e6
         print("Average measured times between readings for 600ms int time", m, "ms")
