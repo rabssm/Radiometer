@@ -9,6 +9,8 @@ import numpy as np
 
 CAPTURE_DIR = os.path.expanduser('~/radiometer_data/')
 
+PEAK_DETECTION_LUX_LIMIT = 2.0
+
 # Taken from https://github.com/adafruit/Adafruit_CircuitPython_TSL2591/blob/main/adafruit_tsl2591.py for cpl calculation
 ADAFRUIT_TSL2591_LUX_DF = 408.0
 
@@ -54,7 +56,7 @@ if __name__ == "__main__":
     peaks = []
     if prominence != 0:
         peaks, properties = find_peaks(
-            df.Lux.clip(upper=4), prominence=prominence, width=(1, 60))
+            df.Lux.clip(upper=PEAK_DETECTION_LUX_LIMIT), prominence=prominence, width=(1, 60))
         print("Peaks found:", len(peaks))
         if (len(peaks) < 50):
             for peak in peaks:
@@ -85,7 +87,7 @@ if __name__ == "__main__":
         rolling[min_rolling_index]/108000)/-0.4, "mag/arcsec^2")
 
     # Plot the lux data vs time
-    plt.figure(figsize=(9, 6))
+    plt.figure(figsize=(10, 6))
     plt.plot(times, df.Lux)
     plt.xlabel('Time')
     plt.ylabel('Lux')
