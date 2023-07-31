@@ -1,10 +1,56 @@
 import argparse
+import re
 import pandas as pd
 from matplotlib import pyplot as plt
 import numpy as np
 import scipy.stats
+import ephem
+import datetime
 
-ANGLE = 65  # Altitude angle of the camera providing FS data
+TWILIGHT_HORIZON = '-9.0'     # Set degree below horizon for twilight (astronomical is -18 degrees)
+
+
+class ConfigReader() :
+    def get_config(self, config_dir) :
+        with open(config_dir + '/.config') as fp:
+            for cnt, line in enumerate(fp):
+                line_words = (re.split("[: ]+", line))
+                if line_words[0] == 'stationID' : self.cameraname = line_words[1]
+                if line_words[0] == 'latitude'  : self.latitude = line_words[1]
+                if line_words[0] == 'longitude' : self.longitude = line_words[1]
+                if line_words[0] == 'elevation' : self.elevation = float(line_words[1])
+
+
+class DayNightChecker() :
+
+    def __init__(self, latitude, longitude, elevation) :
+        self.location = ephem.Observer()
+        self.location.lat, self.location.long = str(latitude), str(longitude)
+        self.location.elevation          = elevation
+        self.location.horizon            = TWILIGHT_HORIZON
+
+        self.sun = ephem.Sun()
+
+
+    def is_sun_down(self, time):
+
+        ephem_time = ephem.Date(time)
+
+        # Only recalculate rise and set if one of them has passed
+        try:
+            if (ephem_time < self.next_setting) and (ephem_time < self.next_rising) :
+                return (self.next_setting > self.next_rising)
+        except:
+            pass
+
+        # Calculate rise and set times
+        try:
+            self.next_setting = self.location.next_setting(self.sun, start=ephem_time)
+            self.next_rising  = self.location.next_rising(self.sun, start=ephem_time)
+            # print(ephem_time, self.next_setting, self.next_rising)
+            return self.next_setting > self.next_rising
+        except:
+            return False
 
 # Main program
 if __name__ == "__main__":
@@ -15,12 +61,24 @@ if __name__ == "__main__":
                     help="File to analyse.")
     ap.add_argument("rms_file", type=str,
                     help="RMS FS file to analyse.")
+    ap.add_argument("-c", "--config_dir", type=str, default='.',
+                    help="RMS config directory")
+    ap.add_argument("-a", "--angle", type=float, default=65.0,
+                    help="Camera angle above horizon")
+    ap.add_argument("-n", "--night", type=str, default=None,
+                    help="Date of night to compare e.g. 20230714")
 
     args = vars(ap.parse_args())
 
     fs_file = args['rms_file']
     sqm_file = args['sqm_file']
+    config_dir = args['config_dir']
+    camera_angle = args['angle']
+    night = args['night']
 
+    config = ConfigReader()
+    config.get_config(config_dir)
+    night_checker = DayNightChecker(config.latitude, config.longitude, config.elevation)
 
     print("Comparing", sqm_file, fs_file)
 
@@ -51,7 +109,26 @@ if __name__ == "__main__":
     df = df.dropna(how='any')
 
     # Clip data below mag 12
-    df = df.drop(df[df.SQM < 12].index)
+    # df = df.drop(df[df.SQM < 12].index)
+
+    # Isolate data based on date
+    if night is not None :
+        start_date = datetime.datetime.strptime(night + ' 12:00', "%Y%m%d %H:%M")
+        end_date = start_date + datetime.timedelta(days=1)
+        print(start_date, end_date)
+
+        res = df[df['times'] > start_date]
+        df = res[res['times'] < end_date]
+
+    # Clip the data outside astronomical twilight (sun 18 degrees below horizon)
+    indexes = []
+    for index, row in df.iterrows():
+        if not night_checker.is_sun_down(row.times) :
+            # print("Dropping", index, row.times)
+            indexes.append(index)
+    
+    df.drop(index=indexes, inplace=True)
+
     print(df)
 
     # Get the correlation
@@ -59,11 +136,14 @@ if __name__ == "__main__":
     linregress_results = scipy.stats.linregress(df['log_FS'], df['SQM'])
     print(linregress_results)
 
+    slope=linregress_results.slope
+    intercept=linregress_results.intercept
+
     # df_fs.times.resample('3T')
     # df_fs.intensity_data_avg=2.5*np.log10(df_fs.intensity_data_avg/np.cos(np.radians(65)))
 
     # Produce curve based on correlation results
-    df["Correlated_data"] = (2.5*np.log10(df.intensity_data_avg/np.cos(np.radians(ANGLE))) * linregress_results.slope) + linregress_results.intercept
+    df["Correlated_data"] = (2.5*np.log10(df.intensity_data_avg/np.cos(np.radians(camera_angle))) * slope) + intercept
 
 
     # Now plot some graphs
