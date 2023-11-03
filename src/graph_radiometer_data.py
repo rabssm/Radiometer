@@ -102,6 +102,7 @@ if __name__ == "__main__":
                  df.Lux[peaks], marker="o", ls="", ms=3)
 
     plt.title('Illuminance')
+    plt.grid()
     if save_figure:
         plt.savefig(os.path.splitext(file_names[-1])[0] + '.png')
         exit(0)
