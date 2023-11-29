@@ -43,13 +43,12 @@ sudo i2cdetect -y 1
 70: -- -- -- -- -- -- -- --                         
 
 ```
+This should display the I2C address of the attached TSL2591, which should be 29.
 
 Add your user to the i2c and gpio groups. For example to allow user pi to access the i2c and gpio ports:
 ```
 sudo usermod -a -G gpio,i2c pi
 ```
-
-This should display the I2C address of the attached TSL2591, which should be 29.
 
 To use the additional/alternative I2C buses, use the --bus option as described in the "Running the radiometer data acquisition software" below.
 
