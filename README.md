@@ -9,7 +9,7 @@ There is a track on the back of the TSL2591 PCB which should be cut to disable t
 As the Raspberry Pi needs to be mounted close to the sensor, the LED's on the Raspberry Pi should also be switched off to remove any source of extraneous light.
 
 ### I2C Ports and Configuration
-If using just one sensor, the sensor can be connected to the normal I2C SDA pin 3 and SCL pin 5 on the Pi's GPIO. The power for the sensor is connected to pin 1 (3.3V) and pin 9 (GND)
+If using just one sensor, the sensor can be connected to the normal I2C SDA pin 3 and SCL pin 5 on the Pi's GPIO. The power for the sensor is connected to pin 1 (3.3V) and pin 9 (GND). See https://learn.adafruit.com/assets/95248
 
 If connecting more than one sensor to one RPi, we can use the dtoverlay to assign extra I2C ports on the GPIO bus. To do this, we add the following line(s) to the /boot/config.txt file.
 ```
@@ -29,7 +29,29 @@ i2c-1	i2c       	bcm2835 (i2c@7e804000)          	I2C adapter
 i2c-4	i2c       	4.i2c                           	I2C adapter
 ```
 
-To use the alternative I2C buses, use the --bus option as described in the "Running the radiometer data acquisition software" below.
+To check that the TSL2591 is available on a bus e.g. bus 1:
+```
+sudo i2cdetect -y 1
+     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+00:                         -- -- -- -- -- -- -- -- 
+10: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+20: -- -- -- -- -- -- -- -- -- 29 -- -- -- -- -- -- 
+30: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+40: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+50: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+60: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+70: -- -- -- -- -- -- -- --                         
+
+```
+
+Add your user to the i2c and gpio groups. For example to allow user pi to access the i2c and gpio ports:
+```
+sudo usermod -a -G gpio,i2c pi
+```
+
+This should display the I2C address of the attached TSL2591, which should be 29.
+
+To use the additional/alternative I2C buses, use the --bus option as described in the "Running the radiometer data acquisition software" below.
 
 More details about assigning extra I2C ports can be found at https://github.com/JJSlabbert/Raspberry_PI_i2C_conficts .
 
