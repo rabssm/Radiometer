@@ -23,7 +23,7 @@ GUARD_TIME = 0.12
 # The tsl2591 default i2c address is 0x29
 DEFAULT_I2C_ADDRESS = adafruit_tsl2591._TSL2591_ADDR
 
-SSSM_FACTOR = 1900
+SSSM_FACTOR = 1900   # Solar diameter is ~1900 arcsec 
 
 
 def signalHandler(signum, frame):
@@ -44,6 +44,7 @@ def reset_sensor(sensor, gain, integration_time):
     sensor.wait_interrupt()
 
 
+# Class to calculate ad write the SSSM readings
 class Sssm_Writer():
     def __init__(self):
         self.rolling = deque(maxlen=10)
@@ -58,11 +59,12 @@ class Sssm_Writer():
         if len(self.rolling) == self.rolling.maxlen:
             rolling = np.array(self.rolling)
             average = np.average(rolling)
+            rms = np.sqrt(np.mean((rolling - average)**2))
             average1 = np.average(rolling[0:4])
             average2 = np.average(rolling[5:9])
-            seeing = SSSM_FACTOR * abs((average2 - average1) / average)
+            seeing = SSSM_FACTOR * abs(rms / average)
             if verbose:
-                print(average1, average2, seeing)
+                print(average1, average2, rms, seeing)
             self.rolling.clear()
 
             with open(SSSM_FILE, 'w') as sqm_file:
@@ -211,9 +213,9 @@ if __name__ == "__main__":
             
             sssm_writer.update(lux)
 
-            # Check if the gain level can be changed
+            # Check if the gain level can be increased
             if auto_gain :
-                if gain_level != adafruit_tsl2591.GAIN_MAX and lux < 3.0:
+                if gain_level == adafruit_tsl2591.GAIN_MED and lux < 3.0:
                     sensor.adc_en_off()
                     gain_level = adafruit_tsl2591.GAIN_MAX
 
@@ -223,7 +225,7 @@ if __name__ == "__main__":
                     # Wait for next valid reading
                     sensor.wait_interrupt()
 
-                elif gain_level != adafruit_tsl2591.GAIN_MED and lux < 2000.0:
+                elif gain_level == adafruit_tsl2591.GAIN_LOW and lux < 2000.0:
                     sensor.adc_en_off()
                     gain_level = adafruit_tsl2591.GAIN_MED
 
