@@ -1,4 +1,5 @@
 import argparse
+from collections import deque
 import glob
 import os
 import pandas as pd
@@ -10,6 +11,8 @@ import numpy as np
 CAPTURE_DIR = os.path.expanduser('~/radiometer_data/')
 
 PEAK_DETECTION_LUX_LIMIT = 2.0
+SSSM_FACTOR = 1900   # Solar diameter is ~1900 arcsec 
+
 
 # Taken from https://github.com/adafruit/Adafruit_CircuitPython_TSL2591/blob/main/adafruit_tsl2591.py for cpl calculation
 ADAFRUIT_TSL2591_LUX_DF = 408.0
@@ -27,6 +30,8 @@ if __name__ == "__main__":
                     help="Display with linear scale")
     ap.add_argument("-s", "--save", action='store_true',
                     help="Save plot")
+    ap.add_argument("--seeing", action='store_true',
+                    help="Display arcsecond seeing graph")
     # ap.add_argument("-s", "--sky", action='store_true',
     #                 help="Display sky brightness")
     ap.add_argument("-p", "--prominence", type=float, default=0,
@@ -39,6 +44,7 @@ if __name__ == "__main__":
     prominence = args['prominence']
     linear_scale = args['linear']
     save_figure = args['save']
+    display_seeing = args['seeing']
 
     # If no filenames were given, use the 2 newest files
     if len(file_names) == 0:
@@ -118,6 +124,47 @@ if __name__ == "__main__":
     plt.title('Sky Brightness')
     plt.legend(loc='lower left')
     plt.show()
+
+    # Plot the seeing
+    if display_seeing:
+        # Split the data into 10 row chunks
+        chunk_size = 10
+        rolling_deque = deque(maxlen=chunk_size)
+        seeings = []
+        seeing_times = []
+
+        # Limit valid seeing readings to a lux value > 2000
+        rslt_df = df[df['Lux'] > 2000] 
+
+        for index, row in rslt_df.iterrows():
+            lux = row['Lux']
+            rolling_deque.append(lux)
+
+            # If the deque is full
+            if len(rolling_deque) == rolling_deque.maxlen:
+                rolling = np.array(rolling_deque)
+                average = np.average(rolling)
+                rms = np.sqrt(np.mean((rolling - average)**2))
+                average1 = np.average(rolling[0:4])
+                average2 = np.average(rolling[5:9])
+                seeing = SSSM_FACTOR * abs(rms / average)
+
+                seeings.append(seeing)
+                seeing_times.append(times[index])
+                # print(average1, average2, rms, seeing)
+                
+                # Clear the deque for the next set of readings
+                rolling_deque.clear()
+
+        plt.xlabel('Time')
+        plt.ylabel('Seeing')
+        # plt.ylim(-1, 20)
+        # plt.yscale("log")
+        plt.plot(seeing_times, seeings, label="Seeing")
+        plt.title('Seeing')
+        plt.legend(loc='upper left')
+        plt.show()
+  
 
     # Plot the visible and IR data vs time
     plt.xlabel('Time')
