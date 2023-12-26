@@ -44,14 +44,14 @@ def reset_sensor(sensor, gain, integration_time):
     sensor.wait_interrupt()
 
 
-# Class to calculate ad write the SSSM readings
+# Class to calculate and write the SSSM readings
 class Sssm_Writer():
     def __init__(self):
         self.rolling = deque(maxlen=10)
 
 
     def update(self, lux_value):
-        # Take a rolling average over last 10 measurements (1s)
+        # Take a rolling average over the last 10 measurements (1s)
 
         self.rolling.append(lux_value)
 
@@ -65,6 +65,8 @@ class Sssm_Writer():
             seeing = SSSM_FACTOR * abs(rms / average)
             if verbose:
                 print(average1, average2, rms, seeing)
+            
+            # Clear the deque for the next set of readings
             self.rolling.clear()
 
             with open(SSSM_FILE, 'w') as sqm_file:
@@ -141,8 +143,6 @@ if __name__ == "__main__":
                     help="Connect to the i2c sensor via an adafruit TCA9548A multiplexer using the number of the multiplexer channel e.g. 0-7")
     ap.add_argument("-n", "--name", type=str, default="",
                     help="Optional name of the sensor for the output file name. Default is no name")
-    ap.add_argument("-s", "--sqm", action='store_true',
-                    help="Take hourly SQM measurements")
     ap.add_argument("-v", "--verbose", action='store_true',
                     help="Verbose output to terminal")
     args = vars(ap.parse_args())
@@ -152,7 +152,6 @@ if __name__ == "__main__":
     gain_name = args['gain']
     device_name = args['name']
     multiplexer = args['multiplexer']
-    sqm = args['sqm']
     verbose = args['verbose']
 
     # Get the TSL2591 gain from the command line string. If the gain is set to auto, set the gain to maximum
@@ -181,7 +180,6 @@ if __name__ == "__main__":
     # Set gain and fastest integration time (100ms)
     sensor.enable()
     gain_level = required_device_gain_setting
-    # gain_level = adafruit_tsl2591.GAIN_LOW
     sensor.gain = gain_level
     sensor.integration_time = adafruit_tsl2591.INTEGRATIONTIME_100MS
     prev_lux = -100
@@ -266,13 +264,10 @@ if __name__ == "__main__":
                 sensor.integration_time = adafruit_tsl2591.INTEGRATIONTIME_100MS
                 # Sleep to ensure next reading is valid
                 sensor.wait_interrupt()
-                # time.sleep(GUARD_TIME)
 
             # If the sensor is still saturated set to lowest gain
             else:
                 reset_sensor(sensor, gain_level, adafruit_tsl2591.INTEGRATIONTIME_100MS)
-
-                # Take a reading at lowest gain, then set the gain back to medium
                 sensor.adc_en_off()
                 gain_level = adafruit_tsl2591.GAIN_LOW
                 sensor.gain = gain_level
