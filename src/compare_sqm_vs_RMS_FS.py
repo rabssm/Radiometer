@@ -139,11 +139,22 @@ if __name__ == "__main__":
     slope=linregress_results.slope
     intercept=linregress_results.intercept
 
+    """
+    # Try a polynomial fit
+    poly_fit_result = np.polyfit(df['log_FS'], df['SQM'], 2)
+    print(poly_fit_result)
+
+    poly_fit_tmp = 2.5*np.log10(df.intensity_data_avg/np.cos(np.radians(camera_angle)))
+    poly_fit = np.polyval(poly_fit_result, poly_fit_tmp)
+    # poly_fit = (np.power(poly_fit_tmp, 3) + (np.square(poly_fit_tmp) * poly_fit_result[0]) + (poly_fit_tmp * poly_fit_result[1]) + poly_fit_result[2]
+    df["Fitted_data"] = poly_fit
+    """
+
     # df_fs.times.resample('3T')
     # df_fs.intensity_data_avg=2.5*np.log10(df_fs.intensity_data_avg/np.cos(np.radians(65)))
 
     # Produce curve based on correlation results
-    df["Correlated_data"] = (2.5*np.log10(df.intensity_data_avg/np.cos(np.radians(camera_angle))) * slope) + intercept
+    df["Fitted_data"] = (df["log_FS"] * slope) + intercept
 
 
     # Now plot some graphs
@@ -182,7 +193,7 @@ if __name__ == "__main__":
 
     color = 'tab:blue'
     # ax2.set_ylabel('RMS Ave FS (converted to mpsas)', color=color)
-    ax1.plot(df.times, df.Correlated_data, color=color, label='RMS FS')
+    ax1.plot(df.times, df.Fitted_data, color=color, label='RMS FS (data fit)')
     
     plt.legend()
     plt.grid()
