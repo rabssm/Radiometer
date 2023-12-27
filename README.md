@@ -124,6 +124,16 @@ You may need to change the path to the python3 you are using, the path to the ra
 python sqm_tsl2591.py
 ```
 
+## Running the Solar Scintillation Seeing Monitor software
+
+This software acquires data all day and logs lux data in the same format as the sqm and radiometer scripts. The most recent seeing value in arcseconds is presented in the file '/tmp/sssm_tsl2591.txt'.
+```
+python sssm_tsl2591.py
+
+# Show graph of the Solar Scintillation Seeing data
+python graph_radiometer_data.py --seeing <csv_data_file>
+```
+
 
 ## "csv" Data Format
 
@@ -141,7 +151,7 @@ Note that the "Visible" and "IR" columns contain the channel 0 and channel 1 raw
 
 ## Display the light intensity, sky brightness and raw data graphs for a particular day/night
 ```
-python graph_radiometer_data.py <data_file>
+python graph_radiometer_data.py <csv_data_file>
 ```
 
 Example light intensity graph for a clear moonlit night:
