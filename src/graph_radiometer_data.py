@@ -30,8 +30,8 @@ if __name__ == "__main__":
                     help="Display with linear scale")
     ap.add_argument("-s", "--save", action='store_true',
                     help="Save plot")
-    ap.add_argument("--seeing", action='store_true',
-                    help="Display arcsecond seeing graph")
+    ap.add_argument("--seeing", type=int, default=0,
+                    help="Display arcsecond seeing graph with seeing averaged over number of seconds supplied")
     # ap.add_argument("-s", "--sky", action='store_true',
     #                 help="Display sky brightness")
     ap.add_argument("-p", "--prominence", type=float, default=0,
@@ -126,8 +126,8 @@ if __name__ == "__main__":
     plt.show()
 
     # Plot the seeing
-    if display_seeing:
-        # Split the data into 10 row chunks
+    if display_seeing != 0 :
+        # Split the data into chunks so we sample the RMS and the average over a period of 1 second
         chunk_size = 10
         rolling_deque = deque(maxlen=chunk_size)
         seeings = []
@@ -156,13 +156,31 @@ if __name__ == "__main__":
                 # Clear the deque for the next set of readings
                 rolling_deque.clear()
 
-        plt.xlabel('Time')
-        plt.ylabel('Seeing')
-        # plt.ylim(-1, 20)
-        # plt.yscale("log")
-        plt.plot(seeing_times, seeings, label="Seeing")
-        plt.title('Seeing')
-        plt.legend(loc='upper left')
+        # Calcluate a rolling average over the required number of seconds
+        rolling_seeings = np.convolve(seeings, np.ones(display_seeing), 'same') / display_seeing
+
+        fig, ax1 = plt.subplots(figsize=(12,7))
+
+        # Plot the illuminance
+        color = 'tab:green'
+        ax1.plot(times, df.Lux, color=color)
+        ax1.set_ylabel('Illuminance (lux)', color=color)
+        ax2 = ax1.twinx()
+
+        # Plot the seeing
+        color = 'tab:blue'
+        ax2.plot(seeing_times, seeings, color=color)
+
+        color = 'tab:red'
+        ax2.plot(seeing_times, rolling_seeings, color=color)
+        ax2.set(xlabel='Time')
+        ax2.set_ylabel('Seeing (arcsec)', color=color)
+
+       
+        # ax1.yaxis.set_ticks_position("right")
+        # ax2.yaxis.set_ticks_position("left")
+
+        plt.grid()
         plt.show()
   
 
