@@ -176,10 +176,6 @@ if __name__ == "__main__":
         ax2.set(xlabel='Time')
         ax2.set_ylabel('Seeing (arcsec)', color=color)
 
-       
-        # ax1.yaxis.set_ticks_position("right")
-        # ax2.yaxis.set_ticks_position("left")
-
         plt.grid()
         plt.show()
   
