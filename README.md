@@ -1,7 +1,7 @@
 # Radiometer for measuring fireball light intensities using an Adafruit TSL2591 digital light sensor
 
 ## Hardware
-A Raspberry Pi Zero, 2, 3 or 4 running the latest release of Raspbian.
+A Raspberry Pi Zero, 2, 3 or 4 running Raspbian Bullseye.
 
 A TSL2591 light sensor with I2C data and power connectors.
 
