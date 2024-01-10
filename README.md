@@ -130,8 +130,8 @@ This software acquires data all day and logs lux data in the same format as the 
 ```
 python sssm_tsl2591.py
 
-# Show graph of the Solar Scintillation Seeing data
-python graph_radiometer_data.py --seeing <csv_data_file>
+# Show graph of the Solar Scintillation Seeing data with a rolling average of 10 seconds
+python graph_radiometer_data.py --seeing 10 <csv_data_file>
 ```
 
 
