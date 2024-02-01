@@ -9,18 +9,18 @@ There is a track on the back of the TSL2591 PCB which should be cut to disable t
 As the Raspberry Pi needs to be mounted close to the sensor, the LED's on the Raspberry Pi should also be switched off to remove any source of extraneous light.
 
 ### I2C Ports and Configuration
-If using just one sensor, the sensor can be connected to the normal I2C SDA pin 3 and SCL pin 5 on the Pi's GPIO. The power for the sensor is connected to pin 1 (3.3V) and pin 9 (GND). See https://learn.adafruit.com/assets/95248
+If using just one sensor, the sensor can be connected to the normal I2C SDA GPIO 2 (pin 3) and SCL GPIO 3 (pin 5) on the Pi's GPIO. The power for the sensor is connected to pin 1 (3.3V) and pin 9 (GND). See https://learn.adafruit.com/assets/95248
 
 If connecting more than one sensor to one RPi, we can use the dtoverlay to assign extra I2C ports on the GPIO bus. To do this, we add the following line(s) to the /boot/config.txt file.
 ```
-# Add extra i2c ports for pins 23 and 24 of the GPIO bus
+# Add extra i2c ports for GPIO pins 23 and 24 of the GPIO bus
 dtoverlay=i2c-gpio,bus=3,i2c_gpio_delay_us=2,i2c_gpio_sda=23,i2c_gpio_scl=24
 
-# Add extra i2c ports for pins 17 and 27 of the GPIO bus
+# Add extra i2c ports for GPIO pins 17 and 27 of the GPIO bus
 dtoverlay=i2c-gpio,bus=4,i2c_gpio_delay_us=2,i2c_gpio_sda=17,i2c_gpio_scl=27
 ```
 
-This assigns pins 23 (SDA) and 24 (SCL) as additional I2C ports for I2C bus 3, and pins 17 (SDA) and 27 (SCL) as additional I2C ports for I2C bus 4.
+This assigns GPIO 23 (pin 16) SDA and GPIO 24 (pin 18) SCL as additional I2C ports for I2C bus 3, and GPIO 17 (pin 11) SDA and GPIO 27 (pin 13) SCL as additional I2C ports for I2C bus 4.
 To check the additional I2C buses
 ```
 sudo i2cdetect -l
