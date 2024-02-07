@@ -168,7 +168,7 @@ if __name__ == "__main__":
         ax2 = ax1.twinx()
 
         # Plot the seeing
-        color = 'tab:blue'
+        color = 'lightblue'
         ax2.plot(seeing_times, seeings, color=color)
 
         color = 'tab:red'
