@@ -157,27 +157,34 @@ if __name__ == "__main__":
                 rolling_deque.clear()
 
         # Calcluate a rolling average over the required number of seconds
-        rolling_seeings = np.convolve(seeings, np.ones(display_seeing), 'same') / display_seeing
+        if len(seeings) < 10:
+            print("Not enough data to plot seeing graph")
 
-        fig, ax1 = plt.subplots(figsize=(12,7))
+        try:
+            rolling_seeings = np.convolve(seeings, np.ones(display_seeing), 'same') / display_seeing
 
-        # Plot the illuminance
-        color = 'tab:green'
-        ax1.plot(times, df.Lux, color=color)
-        ax1.set_ylabel('Illuminance (lux)', color=color)
-        ax2 = ax1.twinx()
+            fig, ax1 = plt.subplots(figsize=(12,7))
 
-        # Plot the seeing
-        color = 'lightblue'
-        ax2.plot(seeing_times, seeings, color=color)
+            # Plot the illuminance
+            color = 'tab:green'
+            ax1.plot(times, df.Lux, color=color)
+            ax1.set_ylabel('Illuminance (lux)', color=color)
+            ax2 = ax1.twinx()
 
-        color = 'tab:red'
-        ax2.plot(seeing_times, rolling_seeings, color=color)
-        ax2.set(xlabel='Time')
-        ax2.set_ylabel('Seeing (arcsec)', color=color)
+            # Plot the seeing
+            color = 'lightblue'
+            ax2.plot(seeing_times, seeings, color=color)
 
-        plt.grid()
-        plt.show()
+            color = 'tab:red'
+            ax2.plot(seeing_times, rolling_seeings, color=color)
+            ax2.set(xlabel='Time')
+            ax2.set_ylabel('Seeing (arcsec)', color=color)
+
+            plt.grid()
+            plt.show()
+ 
+        except Exception as e:
+            print(e)
   
 
     # Plot the visible and IR data vs time
