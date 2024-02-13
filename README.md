@@ -45,9 +45,9 @@ sudo i2cdetect -y 1
 ```
 This should display the I2C address of the attached TSL2591, which should be 29.
 
-Add your user to the i2c and gpio groups. For example to allow user pi to access the i2c and gpio ports:
+Add your user to the i2c and gpio groups:
 ```
-sudo usermod -a -G gpio,i2c pi
+sudo usermod -a -G gpio,i2c $USER
 ```
 
 To use the additional/alternative I2C buses, use the --bus option as described in the "Running the radiometer data acquisition software" below.
@@ -130,8 +130,8 @@ This software acquires data all day and logs lux data in the same format as the 
 ```
 python sssm_tsl2591.py
 
-# Show graph of the Solar Scintillation Seeing data with a rolling average of 10 seconds
-python graph_radiometer_data.py --seeing 10 <csv_data_file>
+# Show graph of the Solar Scintillation Seeing data with a rolling average of 60 seconds
+python graph_radiometer_data.py --seeing 60 <csv_data_file>
 ```
 
 
@@ -139,7 +139,7 @@ python graph_radiometer_data.py --seeing 10 <csv_data_file>
 
 The output data file is a space-separated file containing the date, time, lux value, visible and IR sensor raw data, sensor gain setting, and sensor integration time in milliseconds.
 
-Note that the "Visible" and "IR" columns contain the channel 0 and channel 1 raw values from the sensors. The "Visible" data on channel 0 read from the Adafruit TSL2591 library is the counts from the visible sensor, which is sensitive to both visible and IR.
+Note that the "Visible" and "IR" columns contain the channel 0 and channel 1 raw values from the sensors. The "Visible" data on channel 0 read from the Adafruit TSL2591 library is the counts from the visible sensor, which is sensitive to both visible and IR. The raw data values for each sensor are provided to allow a user to calibrate and tailor their own equations for conversion to sky brightness or seeing values.
 ```
               Date          Time          Lux  Visible    IR    Gain  IntTime
 0       2022/12/24  00:00:02.630     0.002661       13     4  9876.0    100.0
