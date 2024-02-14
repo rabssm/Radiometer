@@ -66,9 +66,6 @@ The gain can also be set to a fixed value using the --gain command line option.
 ### Sky Quality Metering
 There is also a script to monitor sky quality, by measuring the sky brightness. This uses the longest integration time available for the device (600ms), so that there are more counts detected in very dark conditions. This increased integration time should allow sky brightness measurements down to 22 mpsas.
 
-### Data Output
-The data is written to a dated file in the ~/radiometer_data/ directory. For example, the file R20221127.csv contains the light level data for 2022-11-27, with a timestamp for each reading. The timestamps are the times at the end of each lux reading.
-
 ## Installation
 This python software requires the following additional python modules to be installed using pip for python3:
 ```
@@ -135,11 +132,13 @@ python graph_radiometer_data.py --seeing 60 <csv_data_file>
 ```
 
 
-## "csv" Data Format
+## Data Output
+The data is written to a dated file in the ~/radiometer_data/ directory. For example, the file R20221127.csv contains the light level data for 2022-11-27, with a timestamp for each reading. The timestamps are the times at the end of each lux reading.
 
+### "csv" Data Format
 The output data file is a space-separated file containing the date, time, lux value, visible and IR sensor raw data, sensor gain setting, and sensor integration time in milliseconds.
 
-Note that the "Visible" and "IR" columns contain the channel 0 and channel 1 raw values from the sensors. The "Visible" data on channel 0 read from the Adafruit TSL2591 library is the counts from the visible sensor, which is sensitive to both visible and IR. The raw data values for each sensor are provided to allow a user to calibrate and tailor their own equations for conversion to sky brightness or seeing values.
+Note that the "Visible" and "IR" columns contain the channel 0 and channel 1 raw values from the sensors. The "Visible" data on channel 0 read from the Adafruit TSL2591 library is the counts from the "visible" sensor, which is sensitive to both visible and IR. To obtain a Lux reading a proportion of the IR sensor reading is subtracted from the visible+IR sensor reading. The raw data values for each sensor are provided to allow a user to calibrate their device and tailor their own equations for conversion to sky brightness or seeing values.
 ```
               Date          Time          Lux  Visible    IR    Gain  IntTime
 0       2022/12/24  00:00:02.630     0.002661       13     4  9876.0    100.0
