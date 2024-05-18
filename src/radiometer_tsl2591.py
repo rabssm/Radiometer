@@ -1,4 +1,5 @@
 import argparse
+from collections import deque
 import datetime
 import os
 import signal
@@ -6,6 +7,11 @@ import threading
 import time
 import numpy as np
 import syslog
+try:
+    from flask import Flask, jsonify
+except:
+    pass
+
 import board
 from adafruit_extended_bus import ExtendedI2C as I2C
 import adafruit_tsl2591
@@ -64,6 +70,34 @@ def measure_sky_brightness(sensor, radiometer_data_logger):
     # time.sleep(1.3)
 
     return sky_brightness
+
+
+class FlaskServer(threading.Thread):
+    def __init__(self, device_name='radiometer'):
+
+        self.device_name = device_name
+        self.lux = np.nan
+        self.readings = [{'time_stamp': '', 'lux': '', 'vis_level': '', 'ir_level': '', 'again': '', 'atime': ''}]
+
+        # Initialise the thread
+        threading.Thread.__init__(self)
+
+    def run(self):
+        
+        try:
+            app = Flask(__name__)
+            @app.route('/' + self.device_name, methods=['GET'])
+            def get_data():
+                return jsonify({self.device_name: self.readings})
+
+            print("REST service running on:", self.device_name)
+            app.run(host='0.0.0.0', port=5000) # debug=True)
+        except:
+            print("Unable to start flask REST server")
+
+    def set_data(self, time_stamp, lux, vis_level, ir_level, again, atime):
+        self.lux = lux
+        self.readings = [{'time_stamp': time_stamp, 'lux': self.lux, 'vis_level': vis_level, 'ir_level': ir_level, 'again': again, 'atime': atime}]
 
 
 # Class for logging detections to radiometer data file
@@ -278,6 +312,13 @@ if __name__ == "__main__":
     # Create the data logger
     radiometer_data_logger = RadiometerDataLogger(name=device_name)
 
+    # Create the flask REST server
+    if device_name:
+        flask_server = FlaskServer(device_name=device_name)
+    else:
+        flask_server = FlaskServer()
+    flask_server.start()
+
     while True:
         try:
             # Wait for an ALS interrupt to signal a reading has completed
@@ -292,6 +333,9 @@ if __name__ == "__main__":
             # Log the latest reading
             radiometer_data_logger.log_data(
                 time_stamp, lux, vis_level, ir_level, again, atime)
+
+            # Write the latest data to the flask server
+            flask_server.set_data(time_stamp, lux, vis_level, ir_level, again, atime)
 
             # Check if the gain level can be changed back to max
             if auto_gain and gain_level != adafruit_tsl2591.GAIN_MAX and lux < 3.0:
@@ -365,6 +409,9 @@ if __name__ == "__main__":
                         time_stamp = datetime.datetime.now()
                         radiometer_data_logger.log_data(
                             time_stamp, lux, vis_level, ir_level, again, atime)
+                        # Write the data to the flask server
+                        flask_server.set_data(time_stamp, lux, vis_level, ir_level, again, atime)
+
                     except Exception as e:
                         print(e)
 
