@@ -73,6 +73,7 @@ pip install RPi.GPIO
 pip install board
 pip install adafruit-extended-bus
 pip install adafruit-circuitpython-tsl2591
+pip install flask    # For the REST API
 ```
 
 For the graph and lightcurve tools, install pandas and scipy
