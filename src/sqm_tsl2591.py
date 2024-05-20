@@ -7,13 +7,15 @@ import time
 import numpy as np
 from collections import deque
 import syslog
+try:
+    from flask import Flask, jsonify
+except:
+    pass
 import board
 from adafruit_extended_bus import ExtendedI2C as I2C
 import adafruit_tsl2591
 
 DATA_DIR = os.path.expanduser('~/radiometer_data/')
-SQM_FILE = '/tmp/sqm_tsl2591.txt'
-
 
 # Minimum time to wait after a sensor time or gain setting
 GUARD_TIME = 0.12
@@ -40,21 +42,37 @@ def reset_sensor(sensor, gain, integration_time):
     sensor.wait_interrupt()
 
 
-class Sqm_Writer():
-    def __init__(self):
+# Class to run a REST API
+class FlaskServer(threading.Thread):
+    def __init__(self, device_name='SQM'):
+        self.device_name = device_name
         self.rolling = deque(maxlen=10)
+        self.readings = [{'time_stamp': '', 'sky_brightness': '', 'lux': '', 'vis_level': '', 'ir_level': '', 'again': '', 'atime': ''}]
 
+        # Initialise the thread
+        threading.Thread.__init__(self)
 
-    def update(self, sky_brightness):
-        # Take a rolling average over last 10 measurements (6s) and write it to /tmp/sqm_tsl2591.txt
+    def run(self):
+        try:
+            app = Flask(__name__)
+            @app.route('/' + self.device_name, methods=['GET'])
+            def get_data():
+                return jsonify({self.device_name: self.readings})
 
+            print("REST service running on:", self.device_name)
+            app.run(host='0.0.0.0', port=5000) # debug=True)
+        except:
+            print("Unable to start flask REST server")
+
+    def set_data(self, time_stamp, lux, vis_level, ir_level, again, atime):
+        # Take a rolling average of the sky brightness over last 10 measurements (6s)
+        sky_brightness = np.log10(lux/108000)/-0.4
         self.rolling.append(sky_brightness)
-        rolling_average = np.average(self.rolling)
+        sky_brighness_rolling_average = np.average(self.rolling)
 
-        with open(SQM_FILE, 'w') as sqm_file:
-            sqm_file.write(str(rolling_average) + "\n")
+        # Publish the readings
+        self.readings = [{'time_stamp': time_stamp, 'sky_brightness': sky_brighness_rolling_average, 'lux': lux, 'vis_level': vis_level, 'ir_level': ir_level, 'again': again, 'atime': atime}]
 
-        return
 
 # Class for logging detections to radiometer data file
 class RadiometerDataLogger():
@@ -216,8 +234,8 @@ if __name__ == "__main__":
         "-g", "--gain", choices=gain_choices, type=str, default="auto", help="Gain level for the light sensor. Default is auto")
     ap.add_argument("-m", "--multiplexer", type=int, default=None,
                     help="Connect to the i2c sensor via an adafruit TCA9548A multiplexer using the number of the multiplexer channel e.g. 0-7")
-    ap.add_argument("-n", "--name", type=str, default="",
-                    help="Optional name of the sensor for the output file name. Default is no name")
+    ap.add_argument("-n", "--name", type=str, default="SQM",
+                    help="Optional name of the sensor for the output file name. Default is SQM")
     ap.add_argument("-v", "--verbose", action='store_true',
                     help="Verbose output to terminal")
     args = vars(ap.parse_args())
@@ -266,8 +284,9 @@ if __name__ == "__main__":
     # Create the data logger
     radiometer_data_logger = RadiometerDataLogger(name=device_name)
 
-    # Create the SQM readings writer
-    sqm_writer = Sqm_Writer()
+    # Create the flask REST server
+    flask_server = FlaskServer(device_name=device_name)
+    flask_server.start()
 
 
     while True:
@@ -285,8 +304,8 @@ if __name__ == "__main__":
             radiometer_data_logger.log_data(
                 time_stamp, lux, vis_level, ir_level, again, atime)
 
-            # Write the latest SQM value
-            sqm_writer.update(np.log10(lux/108000)/-0.4)
+            # Write the latest data to the flask server
+            flask_server.set_data(time_stamp, lux, vis_level, ir_level, again, atime)
 
             # Check if the gain level can be changed back to max
             if auto_gain and gain_level != adafruit_tsl2591.GAIN_MAX and lux < 1.0:
@@ -358,8 +377,7 @@ if __name__ == "__main__":
                         radiometer_data_logger.log_data(
                             time_stamp, lux, vis_level, ir_level, again, atime)
  
-                        # Write the new SQM value
-                        sqm_writer.update(np.log10(lux/108000)/-0.4)
+                        flask_server.set_data(time_stamp, lux, vis_level, ir_level, again, atime)
 
                     except Exception as e:
                         print(e)
