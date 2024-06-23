@@ -17,11 +17,12 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description='Convert radiometer data to SQM measurements')
     ap.add_argument("file", type=str, nargs='*',
                     help="File or directory to analyse.")
+    ap.add_argument("-o", "--outfile", type=str, help="Output file name", default="sqm.csv")
 
     args = vars(ap.parse_args())
 
     file_names = args['file']
-
+    output_file_name = args['outfile']
 
     print("Converting", file_names)
 
@@ -42,7 +43,7 @@ if __name__ == "__main__":
     print(df)
 
     df[['Date', 'Time', "Rolling"]].to_csv('lux.csv', index=False)
-    df[['Date', 'Time', "SQM"]].to_csv('sqm.csv', index=False)
+    df[['Date', 'Time', "SQM"]].to_csv(output_file_name, index=False)
 
 
     # Try using visible+IR sensor values
