@@ -32,6 +32,9 @@ if __name__ == "__main__":
            for file_name in file_names]
     df = pd.concat(dfs, ignore_index=True)
 
+    if STEP_SIZE > len(df["Lux"]) :
+        STEP_SIZE = int(len(df["Lux"]) / 2)
+
     # Format the times into datetime values
     # times = pd.to_datetime(df.Date + " " + df.Time,
     #                        format="%Y/%m/%d %H:%M:%S.%f")
