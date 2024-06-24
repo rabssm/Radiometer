@@ -32,6 +32,7 @@ if __name__ == "__main__":
            for file_name in file_names]
     df = pd.concat(dfs, ignore_index=True)
 
+    # Check that the file length is long enough for the rolling average step size
     if STEP_SIZE > int(len(df["Lux"]) / 2) :
         STEP_SIZE = int(len(df["Lux"]) / 2)
 
