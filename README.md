@@ -67,6 +67,12 @@ The gain can also be set to a fixed value using the --gain command line option.
 There is also a script to monitor sky quality, by measuring the sky brightness. This uses the longest integration time available for the device (600ms), so that there are more counts detected in very dark conditions. This increased integration time should allow sky brightness measurements down to 22 mpsas.
 
 ## Installation
+
+Firstly clone this repository to your computer:
+```
+git clone https://github.com/rabssm/Radiometer.git
+```
+
 This python software requires the following additional python modules to be installed using pip for python3. These can all be installed using the requirements.txt file e.g.
 ```
 pip install -r requirements.txt
