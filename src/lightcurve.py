@@ -136,7 +136,7 @@ if __name__ == "__main__":
 
     # Plot the lux data vs time
     plt.plot(times, df.Lux)
-    plt.axvspan(times[peaks-width], times[peaks+width], color='red', alpha=0.1)
+    # plt.axvspan(times[peaks-width], times[peaks+width], color='red', alpha=0.1)
     plt.xlabel('Time')
     plt.ylabel('Lux')
 
