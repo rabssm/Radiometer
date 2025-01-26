@@ -16,6 +16,7 @@ from adafruit_extended_bus import ExtendedI2C as I2C
 import adafruit_tsl2591
 
 DATA_DIR = os.path.expanduser('~/radiometer_data/')
+SQM_FILE = '/tmp/sqm_tsl2591.txt'
 
 # Minimum time to wait after a sensor time or gain setting
 GUARD_TIME = 0.12
@@ -40,6 +41,23 @@ def reset_sensor(sensor, gain, integration_time):
     sensor.integration_time = integration_time
     # Wait for next interrupt
     sensor.wait_interrupt()
+
+
+class Sqm_Writer():
+    def __init__(self):
+        self.rolling = deque(maxlen=10)
+
+
+    def update(self, sky_brightness):
+        # Take a rolling average over last 10 measurements (6s) and write it to /tmp/sqm_tsl2591.txt
+
+        self.rolling.append(sky_brightness)
+        rolling_average = np.average(self.rolling)
+
+        with open(SQM_FILE, 'w') as sqm_file:
+            sqm_file.write(str(rolling_average) + "\n")
+
+        return
 
 
 # Class to run a REST API
@@ -284,6 +302,9 @@ if __name__ == "__main__":
     # Create the data logger
     radiometer_data_logger = RadiometerDataLogger(name=device_name)
 
+    # Create the SQM readings writer
+    sqm_writer = Sqm_Writer()
+
     # Create the flask REST server
     flask_server = FlaskServer(device_name=device_name)
     flask_server.start()
@@ -303,6 +324,9 @@ if __name__ == "__main__":
             # Log the latest reading
             radiometer_data_logger.log_data(
                 time_stamp, lux, vis_level, ir_level, again, atime)
+
+            # Write the latest SQM value
+            sqm_writer.update(np.log10(lux/108000)/-0.4)
 
             # Write the latest data to the flask server
             flask_server.set_data(time_stamp, lux, vis_level, ir_level, again, atime)
@@ -377,6 +401,8 @@ if __name__ == "__main__":
                         radiometer_data_logger.log_data(
                             time_stamp, lux, vis_level, ir_level, again, atime)
  
+                         # Write the new SQM value
+                        sqm_writer.update(np.log10(lux/108000)/-0.4)
                         flask_server.set_data(time_stamp, lux, vis_level, ir_level, again, atime)
 
                     except Exception as e:
