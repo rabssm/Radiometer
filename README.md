@@ -1,7 +1,7 @@
 # Radiometer for measuring fireball light intensities using an Adafruit TSL2591 digital light sensor
 
 ## Hardware
-A Raspberry Pi Zero, 2, 3 or 4 running Raspbian Bullseye.
+A Raspberry Pi Zero, 2, 3 or 4 running Raspbian Bookworm.
 
 A TSL2591 light sensor with I2C data and power connectors.
 
@@ -10,6 +10,8 @@ As the Raspberry Pi needs to be mounted close to the sensor, the LED's on the Ra
 
 ### I2C Ports and Configuration
 If using just one sensor, the sensor can be connected to the normal I2C SDA GPIO 2 (pin 3) and SCL GPIO 3 (pin 5) on the Pi's GPIO. The power for the sensor is connected to pin 1 (3.3V) and pin 9 (GND). See https://learn.adafruit.com/assets/95248
+
+Note: Use 'sudo raspi-config' to enable I2C on the raspberry pi.
 
 If connecting more than one sensor to one RPi, we can use the dtoverlay to assign extra I2C ports on the GPIO bus. To do this, we add the following line(s) to the /boot/config.txt file.
 ```
@@ -87,10 +89,11 @@ pip install adafruit-circuitpython-tsl2591
 pip install flask    # For the REST API
 ```
 
-For the graph and lightcurve tools, install pandas and scipy
+For the graph and lightcurve tools, install pandas, scipy and matplotlib
 ```
 pip install pandas
 pip install scipy
+pip install matplotlib
 ```
 
 If using the TCA9548A multiplexer to address more than one TSL2591 light sensor, you will also need to install the TCA9548A package
