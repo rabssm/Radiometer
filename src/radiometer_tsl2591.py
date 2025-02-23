@@ -209,8 +209,8 @@ class adafruit_tsl2591_extended(adafruit_tsl2591.TSL2591):
         self._write_u8(
             adafruit_tsl2591._TSL2591_REGISTER_ENABLE,
             adafruit_tsl2591._TSL2591_ENABLE_POWERON
-            | adafruit_tsl2591._TSL2591_ENABLE_AIEN
-            | adafruit_tsl2591._TSL2591_ENABLE_NPIEN,
+            | adafruit_tsl2591.ENABLE_AIEN
+            | adafruit_tsl2591.ENABLE_NPIEN,
         )
 
     def reset(self):
