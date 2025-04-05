@@ -235,6 +235,16 @@ class adafruit_tsl2591_extended(adafruit_tsl2591.TSL2591):
             self._BUFFER[1] = 0x00 & 0xFF
             i2c.write(self._BUFFER, end=2)
 
+    def wait_interrupt_600(self):
+        # Wait ~600ms for AINT interrupt to signal a reading has completed
+        # Initial sleep 500ms
+        time.sleep(0.5)
+        # Get the status to check for the AINT interrupt being asserted
+        while self._read_u8(0x13) & 0x10 == 0:
+            time.sleep(0.05)
+
+        self.clear_interrupts()
+
     def wait_interrupt(self):
         # Wait for AINT interrupt to signal a reading has completed
         # Initial sleep 50ms
