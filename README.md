@@ -25,7 +25,7 @@ If using just one sensor, the sensor can be connected to the normal I2C SDA GPIO
 
 Note: Use 'sudo raspi-config' to enable I2C on the raspberry pi.
 
-If connecting more than one sensor to one RPi, we can use the dtoverlay to assign extra I2C ports on the GPIO bus. To do this, we add the following line(s) to the /boot/config.txt file.
+If connecting more than one sensor to one RPi, we can use the dtoverlay to assign extra I2C ports on the GPIO bus. To do this, we add the following line(s) to the /boot/firmware/config.txt file.
 ```
 # Add extra i2c ports for GPIO pins 23 and 24 of the GPIO bus
 dtoverlay=i2c-gpio,bus=3,i2c_gpio_delay_us=2,i2c_gpio_sda=23,i2c_gpio_scl=24
