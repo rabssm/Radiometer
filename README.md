@@ -1,12 +1,24 @@
 # Radiometer for measuring fireball light intensities using an Adafruit TSL2591 digital light sensor
 
 ## Hardware
-A Raspberry Pi Zero, 2, 3 or 4 running Raspbian Bookworm.
+A Raspberry Pi Zero, 2, 3, 4 or 5 running Raspbian Bookworm.
 
 A TSL2591 light sensor with I2C data and power connectors.
 
 There is a track on the back of the TSL2591 PCB which should be cut to disable the bright LED on the front of the board.
 As the Raspberry Pi needs to be mounted close to the sensor, the LED's on the Raspberry Pi should also be switched off to remove any source of extraneous light.
+For the Raspberry Pi 3 on Bookworm, all of the LED's can be switched off using the following lines at the bottom of the /boot/firmware/config.txt file:
+```
+# Turn off Power LED
+dtparam=pwr_led_activelow=off
+# Turn off Activity LED
+dtparam=act_led_trigger=none
+dtparam=act_led_activelow=off
+# Turn off Ethernet ACT LED
+dtparam=eth_led0=14
+# Turn off Ethernet LNK LED
+dtparam=eth_led1=14
+```
 
 ### I2C Ports and Configuration
 If using just one sensor, the sensor can be connected to the normal I2C SDA GPIO 2 (pin 3) and SCL GPIO 3 (pin 5) on the Pi's GPIO. The power for the sensor is connected to pin 1 (3.3V) and pin 9 (GND). See https://learn.adafruit.com/assets/95248
