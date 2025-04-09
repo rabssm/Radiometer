@@ -6,8 +6,10 @@ A Raspberry Pi Zero, 2, 3, 4 or 5 running Raspbian Bookworm.
 A TSL2591 light sensor with I2C data and power connectors.
 
 There is a track on the back of the TSL2591 PCB which should be cut to disable the bright LED on the front of the board.
+
 As the Raspberry Pi needs to be mounted close to the sensor, the LED's on the Raspberry Pi should also be switched off to remove any source of extraneous light.
-For the Raspberry Pi 3 on Bookworm, all of the LED's can be switched off using the following lines at the bottom of the /boot/firmware/config.txt file:
+
+For the Raspberry Pi 3 running with Bookworm, all of the LED's can be switched off using the following lines at the end of the /boot/firmware/config.txt file:
 ```
 # Turn off Power LED
 dtparam=pwr_led_activelow=off
@@ -87,8 +89,17 @@ Firstly clone this repository to your computer:
 git clone https://github.com/rabssm/Radiometer.git
 ```
 
-This python software requires the following additional python modules to be installed using pip for python3. These can all be installed using the requirements.txt file e.g.
+This python software requires additional python modules to be installed using pip for python3. These can all be installed using the requirements.txt file. It is recommended that a virtual environment is created for the Radiometer for installing the required pip packages and then for running the software:
 ```
+# Create the virtual environment
+python3 -m venv ~/vRadiometer
+# Activate the virtual environment
+source ~/vRadiometer/bin/activate
+```
+
+```
+# Install the required packages
+cd Radiometer
 pip install -r requirements.txt
 ```
 
