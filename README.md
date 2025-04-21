@@ -1,4 +1,4 @@
-# Radiometer for measuring fireball light intensities using an Adafruit TSL2591 digital light sensor
+# Radiometer for measuring fireball light intensities using an AMS OSRAM TSL2591 digital light sensor
 
 ## Hardware
 A Raspberry Pi Zero, 2, 3, 4 or 5 running Raspbian Bookworm.
