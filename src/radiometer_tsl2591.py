@@ -7,6 +7,7 @@ import threading
 import time
 import numpy as np
 import syslog
+import glob
 try:
     from flask import Flask, jsonify
 except:
@@ -17,6 +18,7 @@ from adafruit_extended_bus import ExtendedI2C as I2C
 import adafruit_tsl2591
 
 DATA_DIR = os.path.expanduser('~/radiometer_data/')
+SECS_IN_3_HOURS = 3 * 60 * 60
 
 # Minimum time to wait after a sensor time or gain setting
 GUARD_TIME = 0.12
@@ -120,6 +122,14 @@ class RadiometerDataLogger():
         # Start a thread to periodically flush the data to disk
         self.flush_thread = threading.Thread(target=self.flush_file)
         self.flush_thread.start()
+ 
+        # Start a thread to periodically clean up old data files
+        if keep_days > 0 :
+            if verbose :
+                print("Starting old data cleanup thread")
+            self.cleanup_thread = threading.Thread(target=self.remove_old_files, args = [keep_days])
+            self.cleanup_thread.start()
+
 
     # Log the date/time and lux reading
     def log_data(self, obs_time, lux_value, vis_level, ir_level, again, atime):
@@ -149,6 +159,22 @@ class RadiometerDataLogger():
                 self.rmfile.flush()
             except:
                 pass
+
+    """ Remove old data files """
+    def remove_old_files(self, days=30) :
+        seconds = days * 86400
+
+        # Check every 3 hours and clean up old data files
+        while True:
+            file_list = [filename for filename in glob.glob(DATA_DIR + '/*') if (time.time() - os.path.getmtime(filename)) > seconds]
+            for filename in file_list :
+                try:
+                    os.remove(filename)
+                    syslog.syslog(syslog.LOG_DEBUG, 'Removed file: ' + filename)
+                except OSError :
+                    syslog.syslog(syslog.LOG_DEBUG, 'Unable to remove file: ' + filename)
+
+            time.sleep(SECS_IN_3_HOURS)
 
 
 # Add a get_light_levels method to the adafruit_tsl2591 class
@@ -268,6 +294,8 @@ if __name__ == "__main__":
     gain_choices = ["max", "high", "med", "low", "auto"]
     ap.add_argument(
         "-g", "--gain", choices=gain_choices, type=str, default="auto", help="Gain level for the light sensor. Default is auto")
+    ap.add_argument("-k", "--keep", type=int, default=0,
+                    help="Keep only files produced in the last n days. Default is 0 - keep all data files")
     ap.add_argument("-m", "--multiplexer", type=int, default=None,
                     help="Connect to the i2c sensor via an adafruit TCA9548A multiplexer using the number of the multiplexer channel e.g. 0-7")
     ap.add_argument("-n", "--name", type=str, default="",
@@ -281,6 +309,7 @@ if __name__ == "__main__":
     i2c_address = args['address']
     i2c_bus = args['bus']
     gain_name = args['gain']
+    keep_days = args['keep']
     device_name = args['name']
     multiplexer = args['multiplexer']
     sqm = args['sqm']
