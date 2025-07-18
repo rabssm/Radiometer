@@ -161,7 +161,11 @@ python sqm_tsl2591.py
 
 ## Running the Solar Scintillation Seeing Monitor software
 
-This software acquires data all day and logs lux data in the same format as the sqm and radiometer scripts. The most recent seeing value in arcseconds is presented in the file '/tmp/sssm_tsl2591.txt'.
+This software acquires data all day and logs lux data in the same format as the sqm and radiometer scripts.
+
+Note: Bright sunlight falling on the sensor will probably saturate the sensor, so a neutral density filter will probably be needed to obtain reasonable seeing readings in full sunlight. Sensible readings will only be achieved when the sun is not obscured by cloud.
+
+The most recent seeing value in arcseconds is presented in the file '/tmp/sssm_tsl2591.txt'.
 ```
 python sssm_tsl2591.py
 
