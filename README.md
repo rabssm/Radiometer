@@ -1,7 +1,7 @@
 # Radiometer for measuring fireball light intensities using an AMS OSRAM TSL2591 digital light sensor
 
 ## Hardware
-A Raspberry Pi Zero, 2, 3, 4 or 5 running Raspbian Bookworm.
+A Raspberry Pi Zero, 2, 3, 4 or 5 running Raspbian Bookworm or Trixie.
 
 A TSL2591 light sensor with I2C data and power connectors.
 
@@ -9,7 +9,7 @@ There is a track on the back of the TSL2591 PCB which should be cut to disable t
 
 As the Raspberry Pi needs to be mounted close to the sensor, the LED's on the Raspberry Pi should also be switched off to remove any source of extraneous light.
 
-For the Raspberry Pi 3 running with Bookworm, all of the LED's can be switched off using the following lines at the end of the /boot/firmware/config.txt file:
+For the Raspberry Pi 3  or 4 running with Bookworm, all of the LED's can be switched off using the following lines at the end of the /boot/firmware/config.txt file:
 ```
 # Turn off Power LED
 dtparam=pwr_led_activelow=off
@@ -25,7 +25,17 @@ dtparam=eth_led1=14
 ### I2C Ports and Configuration
 If using just one sensor, the sensor can be connected to the normal I2C SDA GPIO 2 (pin 3) and SCL GPIO 3 (pin 5) on the Pi's GPIO. The power for the sensor is connected to pin 1 (3.3V) and pin 9 (GND). See https://learn.adafruit.com/assets/95248
 
-Note: Use 'sudo raspi-config' to enable I2C on the raspberry pi.
+Note: Use 'sudo raspi-config' to enable I2C on the raspberry pi and then reboot.
+
+Install the i2c tools:
+```
+sudo apt update && sudo apt install i2c-tools
+```
+
+Add your user to the i2c and gpio groups:
+```
+sudo usermod -a -G gpio,i2c $USER
+```
 
 If connecting more than one sensor to one RPi, we can use the dtoverlay to assign extra I2C ports on the GPIO bus. To do this, we add the following line(s) to the /boot/firmware/config.txt file.
 ```
@@ -61,21 +71,16 @@ sudo i2cdetect -y 1
 ```
 This should display the I2C address of the attached TSL2591, which should be 29.
 
-Add your user to the i2c and gpio groups:
-```
-sudo usermod -a -G gpio,i2c $USER
-```
-
 To use the additional/alternative I2C buses, use the --bus option as described in the "Running the radiometer data acquisition software" below.
 
 More details about assigning extra I2C ports can be found at https://github.com/JJSlabbert/Raspberry_PI_i2C_conficts .
 
 
 ## Software
-Python 3 script to continuously read and log the light intensity levels in lux detected by an Adafruit TSL2591 digital light sensor. The integration time is set to the minimum time allowed by this device (100ms), which allows light levels to be read at 10 Hz.
+Python3 script to continuously read and log the light intensity levels in lux detected by an Adafruit TSL2591 digital light sensor. The integration time is set to the minimum time allowed by this device (100ms), which allows light levels to be read at 10 Hz.
 
 ### Gain Settings
-By default, the gain is automatically controlled and is initially set to maximum. In the event of the detector becoming saturated, the gain is changed to the medium setting, which should allow light levels to continue to be monitored up to a brightness of 3000 Lux in the event of very bright fireball events. The downside of the auto gain setting is that there will be a gap of 200 ms between valid readings during the period when the detector was saturated and while the gain is changed.
+By default, the gain is automatically controlled and is initially set to maximum. In the event of the detector becoming saturated, the gain is changed to the medium setting, which should allow light levels to continue to be monitored up to a brightness of 3000 Lux in the event of very bright fireball events. The downside of the auto gain setting is that there will be a gap of at least 200 ms between valid readings during the period when the detector was saturated and while the gain is changed.
 
 The gain can also be set to a fixed value using the --gain command line option.
 
@@ -83,14 +88,16 @@ The gain can also be set to a fixed value using the --gain command line option.
 There is also a script to monitor sky quality, by measuring the sky brightness. This uses the longest integration time available for the device (600ms), so that there are more counts detected in very dark conditions. This increased integration time should allow sky brightness measurements down to 22 mpsas.
 
 ## Installation
-
-Firstly clone this repository to your computer:
+Clone this repository to your computer:
 ```
 git clone https://github.com/rabssm/Radiometer.git
 ```
 
-This python software requires additional python modules to be installed using pip for python3. These can all be installed using the requirements.txt file. It is recommended that a virtual environment is created for the Radiometer for installing the required pip packages and then for running the software:
+The software requires additional python modules to be installed using pip for python3. These can all be installed using the requirements.txt file. It is recommended that a virtual environment is created for the Radiometer for installing the required pip packages and then for running the software:
 ```
+# Install apt packages required for the build
+sudo apt update && sudo apt install python3-dev
+
 # Create the virtual environment
 python3 -m venv ~/vRadiometer
 # Activate the virtual environment
@@ -136,6 +143,12 @@ python radiometer_tsl2591.py --bus 3 --gain med --name GAIN_MED
 python radiometer_tsl2591.py --bus 4 --gain low --name GAIN_LOW
 ```
 
+The above commands for running the lux meter will produce 3 output files in the ~/radiometer_data/ directory named e.g.
+R_GAIN_MAX_20260204.csv
+R_GAIN_MED_20260204.csv
+R_GAIN_LOW_20260204.csv
+
+
 
 If using a TCA9548A multiplexer, specify the channel number that the light sensor is connected to on the TCA9548A. For example, to run using 3 sensors at different fixed gains using a TCA9548A multiplexer:
 ```
@@ -148,7 +161,7 @@ python radiometer_tsl2591.py --multiplexer 2 --gain low --name GAIN_LOW
 
 To get the lux meter to run on every reboot, add the following to your cron tasks using 'crontab -e'
 ```
-@reboot sleep 60 && /usr/bin/python3 ~/source/Radiometer/src/radiometer_tsl2591.py 2>&1 | /usr/bin/logger -t radiometer_tsl2591.py
+@reboot sleep 60 && ~/vRadiometer/bin/python ~/source/Radiometer/src/radiometer_tsl2591.py 2>&1 | /usr/bin/logger -t radiometer_tsl2591.py
  
 ```
 You may need to change the path to the python3 you are using, the path to the radiometer_tsl2591.py script, and add any command line options needed for additional sensors.
