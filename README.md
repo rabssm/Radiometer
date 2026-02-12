@@ -93,20 +93,20 @@ Clone this repository to your computer:
 git clone https://github.com/rabssm/LuxMeter.git
 ```
 
-The software requires additional python modules to be installed using pip for python3. These can all be installed using the requirements.txt file. It is recommended that a virtual environment is created for the Radiometer for installing the required pip packages and then for running the software:
+The software requires additional python modules to be installed using pip for python3. These can all be installed using the requirements.txt file. It is recommended that a virtual environment is created for the Lux meter for installing the required pip packages and then for running the software:
 ```
 # Install apt packages required for the build
 sudo apt update && sudo apt install python3-dev
 
 # Create the virtual environment
-python3 -m venv ~/vRadiometer
+python3 -m venv ~/vLuxMeter
 # Activate the virtual environment
-source ~/vRadiometer/bin/activate
+source ~/vLuxMeter/bin/activate
 ```
 
 ```
 # Install the required packages
-cd Radiometer
+cd LuxMeter
 pip install -r requirements.txt
 ```
 
@@ -161,7 +161,7 @@ python radiometer_tsl2591.py --multiplexer 2 --gain low --name GAIN_LOW
 
 To get the lux meter to run on every reboot, add the following to your cron tasks using 'crontab -e'
 ```
-@reboot sleep 60 && ~/vRadiometer/bin/python ~/source/Radiometer/src/radiometer_tsl2591.py 2>&1 | /usr/bin/logger -t radiometer_tsl2591.py
+@reboot sleep 60 && ~/vLuxMeter/bin/python ~/source/LuxMeter/src/radiometer_tsl2591.py 2>&1 | /usr/bin/logger -t radiometer_tsl2591.py
  
 ```
 You may need to change the path to the python3 you are using, the path to the radiometer_tsl2591.py script, and add any command line options needed for additional sensors.
@@ -211,5 +211,5 @@ python graph_radiometer_data.py <csv_data_file>
 
 Example light intensity graph for a clear moonlit night:
 
-![alt text](https://github.com/rabssm/Radiometer/blob/main/doc/Figure_Moon1.png)
+![alt text](https://github.com/rabssm/LuxMeter/blob/main/doc/Figure_Moon1.png)
 
