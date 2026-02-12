@@ -82,7 +82,7 @@ Python3 script to continuously read and log the light intensity levels in lux de
 ### Gain Settings
 By default, the gain is automatically controlled and is initially set to maximum. In the event of the detector becoming saturated, the gain is changed to the medium setting, which should allow light levels to continue to be monitored up to a brightness of 3000 Lux in the event of very bright fireball events. The downside of the auto gain setting is that there will be a gap of at least 200 ms between valid readings during the period when the detector was saturated and while the gain is changed.
 
-The gain can also be set to a fixed value using the --gain command line option.
+The gain can also be set to a fixed value using the --gain command line option. Valid gain settings are "max", "high", "med", "low", and "auto". When using a fixed gain setting, the gain is not changed in the event of the sensor becoming saturated and no lux reading is logged resulting in a time gap in the output file.
 
 ### Sky Quality Metering
 There is also a script to monitor sky quality, by measuring the sky brightness. This uses the longest integration time available for the device (600ms), so that there are more counts detected in very dark conditions. This increased integration time should allow sky brightness measurements down to 22 mpsas.
@@ -90,7 +90,7 @@ There is also a script to monitor sky quality, by measuring the sky brightness. 
 ## Installation
 Clone this repository to your computer:
 ```
-git clone https://github.com/rabssm/Radiometer.git
+git clone https://github.com/rabssm/LuxMeter.git
 ```
 
 The software requires additional python modules to be installed using pip for python3. These can all be installed using the requirements.txt file. It is recommended that a virtual environment is created for the Radiometer for installing the required pip packages and then for running the software:
