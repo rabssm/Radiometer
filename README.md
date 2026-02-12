@@ -1,4 +1,4 @@
-# Radiometer for measuring fireball light intensities using an AMS OSRAM TSL2591 digital light sensor
+# Lux meter for measuring fireball light intensities using an AMS OSRAM TSL2591 digital light sensor
 
 ## Hardware
 A Raspberry Pi Zero, 2, 3, 4 or 5 running Raspbian Bookworm or Trixie.
@@ -71,7 +71,7 @@ sudo i2cdetect -y 1
 ```
 This should display the I2C address of the attached TSL2591, which should be 29.
 
-To use the additional/alternative I2C buses, use the --bus option as described in the "Running the radiometer data acquisition software" below.
+To use the additional/alternative I2C buses, use the --bus option as described in the "Running the lux meter data acquisition software" below.
 
 More details about assigning extra I2C ports can be found at https://github.com/JJSlabbert/Raspberry_PI_i2C_conficts .
 
@@ -131,7 +131,7 @@ If using the TCA9548A multiplexer to address more than one TSL2591 light sensor,
 pip install adafruit-circuitpython-tca9548a
 ```
 
-## Running the radiometer data acquisition software
+## Running the lux meter data acquisition software
 ```
 python radiometer_tsl2591.py
 ```
@@ -157,7 +157,7 @@ python radiometer_tsl2591.py --multiplexer 1 --gain med --name GAIN_MED
 python radiometer_tsl2591.py --multiplexer 2 --gain low --name GAIN_LOW
 ```
 
-## Starting the radiometer data acquisition software on each reboot
+## Starting the lux meter data acquisition software on each reboot
 
 To get the lux meter to run on every reboot, add the following to your cron tasks using 'crontab -e'
 ```
@@ -174,7 +174,8 @@ python sqm_tsl2591.py
 
 ## Running the Solar Scintillation Seeing Monitor software
 
-This software acquires data all day and logs lux data in the same format as the sqm and radiometer scripts.
+This software acquires data all day and logs lux data in the same format as the sqm and lux meter scripts.
+
 
 Note: Bright sunlight falling on the sensor will probably saturate the sensor, so a neutral density filter will probably be needed to obtain reasonable seeing readings in full sunlight. Sensible readings will only be achieved when the sun is not obscured by cloud.
 
