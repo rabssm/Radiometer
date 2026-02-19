@@ -204,6 +204,42 @@ Note that the "Visible" and "IR" columns contain the channel 0 and channel 1 raw
 4       2022/12/24  00:00:03.416     0.001570       12     5  9876.0    100.0
 ```
 
+### Lux to Approx Fireball Magnitude (overhead) and Gain Settings
+
+Assumptions:
+- Full Moon ≈ **0.25 lux** at **m = −12.7**
+- Fireball roughly overhead, clear sky
+
+| Illuminance (lux) | Approx magnitude |
+|---:|---:|
+| 0.001 | −4.2 |
+| 0.01 | −6.7 |
+| 0.05 | −8.4 |
+| 0.1 | −9.2 |
+| 0.25 (full Moon) | −12.7 |
+| 0.5 | −13.5 |
+| 1 | −14.2 |
+| 2 | −15.0 |
+| 5 | −16.0 |
+| 10 | −16.7 |
+| 20 | −17.5 |
+| 50 | −18.4 |
+| 100 | −19.2 |
+| 200 | −20.0 |
+| 500 | −21.0 |
+| 1000 | −21.7 |
+
+The gain settings of the sensor have the approximate limits shown below
+
+| Gain | Max Illuminance (lux) |
+|max |  2 |
+|high | 120 |
+|med | 2000 |
+|low | 88000 |
+
+From the above tables, it can be seen that a "max" and a "med" gain sensor would adequately cover the illuminance range from 0 to 2000 Lux, up to a magnitude -22 fireball overhead.
+
+
 ## Display the light intensity, sky brightness and raw data graphs for a particular day/night
 ```
 python graph_radiometer_data.py <csv_data_file>
