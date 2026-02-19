@@ -232,10 +232,11 @@ Assumptions:
 The gain settings of the sensor have the approximate limits shown below
 
 | Gain | Max Illuminance (lux) |
-|max |  2 |
-|high | 120 |
-|med | 2000 |
-|low | 88000 |
+|---:|---:|
+| max |  2 |
+| high | 120 |
+| med | 2000 |
+| low | 88000 |
 
 From the above tables, it can be seen that a "max" and a "med" gain sensor would adequately cover the illuminance range from 0 to 2000 Lux, up to a magnitude -22 fireball overhead.
 
