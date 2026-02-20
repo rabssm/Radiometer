@@ -9,7 +9,7 @@ There is a track on the back of the TSL2591 PCB which should be cut to disable t
 
 As the Raspberry Pi needs to be mounted close to the sensor, the LED's on the Raspberry Pi should also be switched off to remove any source of extraneous light.
 
-For the Raspberry Pi 3  or 4 running with Bookworm, all of the LED's can be switched off using the following lines at the end of the /boot/firmware/config.txt file:
+For the Raspberry Pi 3  or 4 running with raspbian Trixie, all of the LED's can be switched off using the following lines at the end of the /boot/firmware/config.txt file:
 ```
 # Disable Power LED (Red)
 dtparam=pwr_led_activelow=off
