@@ -11,14 +11,16 @@ As the Raspberry Pi needs to be mounted close to the sensor, the LED's on the Ra
 
 For the Raspberry Pi 3  or 4 running with Bookworm, all of the LED's can be switched off using the following lines at the end of the /boot/firmware/config.txt file:
 ```
-# Turn off Power LED
+# Disable Power LED (Red)
 dtparam=pwr_led_activelow=off
-# Turn off Activity LED
-dtparam=act_led_trigger=none
+dtparam=pwr_led_trigger=none
+
+# Disable Activity LED (Green)
 dtparam=act_led_activelow=off
-# Turn off Ethernet ACT LED
+dtparam=act_led_trigger=none
+
+# Disable Ethernet LEDs
 dtparam=eth_led0=14
-# Turn off Ethernet LNK LED
 dtparam=eth_led1=14
 ```
 
